@@ -1,0 +1,18 @@
+# Compiled Java class files
+*.class
+
+# SQLite Database & CSV local data
+*.db
+*.db-journal
+pharmacy.csv
+users.csv
+
+# IDE & Editor files
+.idea/
+*.iml
+.artifacts/
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
