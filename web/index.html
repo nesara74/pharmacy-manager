@@ -161,7 +161,7 @@
     animation: fadeInUp 0.35s ease-out;
   }
 
-  /* PASTEL KPI CARDS (DRIBBBLE MATCH) */
+  /* PASTEL KPI CARDS */
   .cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -301,7 +301,6 @@
   .bar-pillar.p-purple { background: linear-gradient(180deg, #818cf8 0%, #c7d2fe 100%); }
   .bar-label { font-size: 11px; font-weight: 700; color: #64748b; }
 
-  /* FLOATING TOOLTIP MATCHING DRIBBBLE */
   .chart-tooltip {
     position: absolute;
     top: -10px;
@@ -314,6 +313,33 @@
     font-size: 12px;
   }
   .chart-tooltip b { display: block; font-size: 18px; color: #34d399; margin-top: 2px; }
+
+  /* LIVE AUTOCOMPLETE DROPDOWN SEARCH */
+  .autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0; right: 0;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 4px;
+  }
+  .dropdown-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s ease;
+  }
+  .dropdown-item:hover {
+    background: #f0fdf4;
+  }
 
   /* TABLES & FORMS */
   input, select {
@@ -432,7 +458,6 @@
     margin-bottom: 22px;
   }
 
-  /* THERMAL RECEIPT PRINT STYLES */
   @media print {
     body * { visibility: hidden; }
     #receipt, #receipt * { visibility: visible; }
@@ -670,25 +695,34 @@
 
       </section>
 
-      <!-- BILLING TAB -->
+      <!-- BILLING TAB WITH LIVE AUTOCOMPLETE & OUT OF STOCK CONFIRMATION -->
       <section id="tab-billing" hidden>
         <div class="panel">
           <h3>🛒 Point of Sale &amp; Orders</h3>
           <div class="toolbar">
             <input id="customer" placeholder="Customer name (optional)" style="width:280px">
           </div>
-          <div class="toolbar" style="background:#e0f2fe; padding:12px; border-radius:8px; border:1px solid #bae6fd;">
-            <b style="color:#0369a1;">🏷️ Quick Barcode Scan:</b>
-            <input id="scanAddBox" placeholder="Scan barcode or type ID & press Enter" style="width:300px" onkeydown="if(event.key==='Enter'){scanAddToBill();}">
-            <button class="accent" onclick="scanAddToBill()">Add to Bill</button>
+
+          <!-- LIVE AUTOCOMPLETE SEARCH INPUT & DROPDOWN -->
+          <div class="toolbar" style="background:#f0fdf4; padding:16px; border-radius:12px; border:1px solid #bbf7d0; gap:14px; position:relative;">
+            <div style="flex:1; position:relative;">
+              <b style="color:#047857;">🔍 Live Medicine / Barcode / Rack Search:</b>
+              <input id="medSearchBox" placeholder="Type first letter of medicine, barcode (e.g. 8901001001), or ID..."
+                     style="width:100%; padding:10px 14px; margin-top:6px;"
+                     oninput="onLiveSearchInput()" onfocus="onLiveSearchInput()" autocomplete="off">
+              <div id="liveSearchResults" class="autocomplete-dropdown" hidden></div>
+            </div>
+            <div style="width:110px;">
+              <b style="color:#047857;">Quantity:</b>
+              <input id="pickQty" type="number" min="1" value="1" style="width:100%; padding:10px 14px; margin-top:6px;">
+            </div>
+            <div style="align-self:flex-end;">
+              <button class="accent" style="padding:11px 20px;" onclick="addLineFromSearch()">🛒 Add to Bill</button>
+            </div>
           </div>
-          <div class="toolbar" style="margin-top:12px">
-            <select id="pickMed" style="width:340px"></select>
-            <input id="pickQty" type="number" min="1" value="1" style="width:90px">
-            <button onclick="addLine()">Add to bill</button>
-          </div>
+
           <table>
-            <thead><tr><th>Medicine</th><th>Unit Price</th><th>Qty</th><th>Line Total</th><th>Action</th></tr></thead>
+            <thead><tr><th>Medicine</th><th>Unit Price</th><th>Qty Control</th><th>Line Total</th><th>Action</th></tr></thead>
             <tbody id="billRows"><tr><td colspan="5">No medicines added yet.</td></tr></tbody>
           </table>
           <div style="font-size:24px; font-weight:800; margin:16px 0; color:#047857;">Total Amount: ₹<span id="billTotal">0.00</span></div>
@@ -790,12 +824,26 @@
   </div>
 </div>
 
+<!-- OUT OF STOCK / STOCK LIMIT WARNING MODAL -->
+<div id="stockWarnModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;" hidden>
+  <div style="background:#fff; padding:26px; border-radius:16px; width:440px; box-shadow:0 10px 30px rgba(0,0,0,0.25); animation:popScale 0.25s ease;">
+    <h3 style="margin-top:0; color:#b91c1c; display:flex; align-items:center; gap:8px;">⚠️ Stock Quantity Warning</h3>
+    <p id="stockWarnText" style="font-size:14px; color:#334155; line-height:1.5; margin:14px 0;"></p>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+      <button class="gray" onclick="closeStockWarnModal()">❌ Cancel</button>
+      <button id="btnProceedStock" class="warn" onclick="proceedStockWarn()">✅ Proceed with Available Stock</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let me = null;
   let allItems = [];
   let shown = [];
   let editingId = null;
   let bill = [];
+  let selectedSearchMed = null;
+  let pendingStockWarn = null;
 
   let isDemoMode = false;
   let demoUsers = [
@@ -935,7 +983,6 @@
   function showTab(name) {
     document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
     TABS.forEach(t => document.getElementById('tab-' + t).hidden = t !== name);
-    if (name === 'billing') renderPicker();
     if (name === 'bills') loadBills();
     if (name === 'users') loadUsers();
     if (name === 'audit') loadAudit();
@@ -1064,6 +1111,159 @@
     showMsg('Inventory CSV exported successfully!', true);
   }
 
+  // ---------- LIVE AUTOCOMPLETE SEARCH IN POS BILLING ----------
+  function onLiveSearchInput() {
+    const box = document.getElementById('medSearchBox');
+    const dropdown = document.getElementById('liveSearchResults');
+    const query = box.value.trim().toLowerCase();
+
+    if (!query) {
+      dropdown.hidden = true;
+      dropdown.innerHTML = '';
+      selectedSearchMed = null;
+      return;
+    }
+
+    const matches = allItems.filter(m =>
+      m.name.toLowerCase().includes(query) ||
+      (m.barcode && m.barcode.toLowerCase().includes(query)) ||
+      m.id.toLowerCase().includes(query) ||
+      (m.rack && m.rack.toLowerCase().includes(query))
+    );
+
+    if (matches.length === 0) {
+      dropdown.innerHTML = '<div style="padding:12px 16px; color:#94a3b8; font-size:13px;">❌ No matching medicines or barcodes found.</div>';
+      dropdown.hidden = false;
+      selectedSearchMed = null;
+      return;
+    }
+
+    dropdown.innerHTML = matches.map(m => {
+      const stockBadge = m.quantity > 0
+        ? `<span class="badge OK" style="font-size:10px;">In Stock: ${m.quantity}</span>`
+        : `<span class="badge EXPIRED" style="font-size:10px;">OUT OF STOCK (0)</span>`;
+      return `
+        <div class="dropdown-item" onclick="selectSearchMed('${m.id}')">
+          <div>
+            <b>${esc(m.name)}</b> <small style="color:#64748b;">(${esc(m.id)})</small>
+            <div style="font-size:11px; color:#64748b; margin-top:2px;">
+              ${m.barcode ? `🏷️ ${esc(m.barcode)} | ` : ''} 📦 ${esc(m.rack || 'Rack N/A')} | ₹${m.price.toFixed(2)}
+            </div>
+          </div>
+          <div>${stockBadge}</div>
+        </div>
+      `;
+    }).join('');
+
+    dropdown.hidden = false;
+  }
+
+  function selectSearchMed(id) {
+    const m = allItems.find(x => x.id === id);
+    if (!m) return;
+    selectedSearchMed = m;
+    document.getElementById('medSearchBox').value = `${m.name} [₹${m.price.toFixed(2)}]`;
+    document.getElementById('liveSearchResults').hidden = true;
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('liveSearchResults');
+    const box = document.getElementById('medSearchBox');
+    if (dropdown && box && !box.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.hidden = true;
+    }
+  });
+
+  function addLineFromSearch() {
+    const qty = parseInt(document.getElementById('pickQty').value, 10);
+    const boxVal = document.getElementById('medSearchBox').value.trim();
+
+    let m = selectedSearchMed;
+    if (!m && boxVal) {
+      const query = boxVal.toLowerCase();
+      m = allItems.find(x => x.name.toLowerCase() === query || (x.barcode && x.barcode.toLowerCase() === query) || x.id.toLowerCase() === query);
+    }
+
+    if (!m) {
+      showMsg('Please search and select a medicine from the list first.', false);
+      return;
+    }
+
+    if (!(qty > 0)) {
+      showMsg('Quantity must be at least 1.', false);
+      return;
+    }
+
+    const existing = bill.find(l => l.id === m.id);
+    const currentInBill = existing ? existing.qty : 0;
+    const requestedTotal = currentInBill + qty;
+
+    // OUT OF STOCK OR EXCEEDS STOCK WARNING MODAL
+    if (m.quantity <= 0 || requestedTotal > m.quantity) {
+      openStockWarnModal(m, qty, currentInBill);
+      return;
+    }
+
+    if (existing) existing.qty += qty;
+    else bill.push({ id: m.id, name: m.name, price: m.price, qty });
+
+    showMsg(`✅ Added ${qty} x ${m.name} to bill.`, true);
+    document.getElementById('medSearchBox').value = '';
+    selectedSearchMed = null;
+    renderBill();
+  }
+
+  // OUT OF STOCK / OVER-STOCK CONFIRMATION MODAL
+  function openStockWarnModal(m, requestedQty, currentInBill) {
+    pendingStockWarn = { m, requestedQty, currentInBill };
+    const textEl = document.getElementById('stockWarnText');
+    const btnProceed = document.getElementById('btnProceedStock');
+
+    if (m.quantity <= 0) {
+      textEl.innerHTML = `
+        <b>Item "${esc(m.name)}" is OUT OF STOCK (0 units left).</b><br><br>
+        You requested <b>${requestedQty} units</b>, but there is no stock in the inventory.
+      `;
+      btnProceed.style.display = 'none';
+    } else {
+      textEl.innerHTML = `
+        <b>Requested quantity exceeds current available stock!</b><br><br>
+        Item: <b>${esc(m.name)}</b><br>
+        Available Stock: <b style="color:#047857;">${m.quantity} units</b><br>
+        Already in Bill: <b>${currentInBill} units</b><br>
+        Requested Add: <b>${requestedQty} units</b><br><br>
+        Would you like to proceed by adding the maximum available stock (<b>${m.quantity - currentInBill} units</b>) to the bill?
+      `;
+      btnProceed.style.display = 'inline-flex';
+    }
+
+    document.getElementById('stockWarnModal').hidden = false;
+  }
+
+  function closeStockWarnModal() {
+    pendingStockWarn = null;
+    document.getElementById('stockWarnModal').hidden = true;
+  }
+
+  function proceedStockWarn() {
+    if (!pendingStockWarn) return;
+    const { m, currentInBill } = pendingStockWarn;
+    const maxCanAdd = m.quantity - currentInBill;
+
+    if (maxCanAdd > 0) {
+      const existing = bill.find(l => l.id === m.id);
+      if (existing) existing.qty += maxCanAdd;
+      else bill.push({ id: m.id, name: m.name, price: m.price, qty: maxCanAdd });
+      showMsg(`✅ Added maximum available stock (${maxCanAdd} x ${m.name}) to bill.`, true);
+      renderBill();
+    }
+
+    closeStockWarnModal();
+    document.getElementById('medSearchBox').value = '';
+    selectedSearchMed = null;
+  }
+
   async function changeStock(i, sign) {
     const m = shown[i];
     const text = prompt((sign > 0 ? 'Stock IN' : 'Stock OUT') + ' amount for ' + m.name + ':');
@@ -1154,42 +1354,38 @@
     `).join('');
   }
 
-  function scanAddToBill() {
-    const val = document.getElementById('scanAddBox').value.trim();
-    if (!val) return;
-    const lc = val.toLowerCase();
-    const m = allItems.find(x => (x.barcode && x.barcode.toLowerCase() === lc) || (x.id && x.id.toLowerCase() === lc) || (x.name && x.name.toLowerCase() === lc));
-    if (!m) { showMsg('No medicine found with barcode/ID: ' + val, false); return; }
-    quickAddBill(m.id);
-    document.getElementById('scanAddBox').value = '';
-  }
-
   function quickAddBill(id) {
     const m = allItems.find(x => x.id === id);
     if (!m) return;
-    if (m.quantity <= 0) { showMsg('Out of stock!', false); return; }
     const existing = bill.find(l => l.id === id);
-    if (existing) {
-      if (existing.qty + 1 > m.quantity) { showMsg('Not enough stock left.', false); return; }
-      existing.qty++;
-    } else bill.push({ id: m.id, name: m.name, price: m.price, qty: 1 });
+    const currentInBill = existing ? existing.qty : 0;
+
+    if (m.quantity <= 0 || currentInBill + 1 > m.quantity) {
+      openStockWarnModal(m, 1, currentInBill);
+      return;
+    }
+
+    if (existing) existing.qty++;
+    else bill.push({ id: m.id, name: m.name, price: m.price, qty: 1 });
     showTab('billing');
+    showMsg('✅ Added 1 x ' + m.name + ' to bill.', true);
     renderBill();
   }
 
-  function renderPicker() {
-    const sel = document.getElementById('pickMed');
-    sel.innerHTML = allItems.filter(m => m.quantity > 0).map(m => '<option value="' + esc(m.id) + '">' + esc(m.name) + ' [Rack: ' + esc(m.rack || 'N/A') + '] (₹' + m.price.toFixed(2) + ', stock ' + m.quantity + ')</option>').join('');
-  }
-
-  function addLine() {
-    const id = document.getElementById('pickMed').value;
-    const qty = parseInt(document.getElementById('pickQty').value, 10);
-    const m = allItems.find(x => x.id === id);
-    if (!m || !(qty > 0)) return;
-    const existing = bill.find(l => l.id === id);
-    if (existing) existing.qty += qty;
-    else bill.push({ id: m.id, name: m.name, price: m.price, qty });
+  function updateBillQty(index, delta) {
+    const item = bill[index];
+    if (!item) return;
+    const m = allItems.find(x => x.id === item.id);
+    const newQty = item.qty + delta;
+    if (newQty <= 0) {
+      removeLine(index);
+      return;
+    }
+    if (m && newQty > m.quantity) {
+      openStockWarnModal(m, 1, item.qty);
+      return;
+    }
+    item.qty = newQty;
     renderBill();
   }
 
@@ -1201,7 +1397,17 @@
       tbody.innerHTML = bill.map((l, i) => {
         const line = l.qty * l.price;
         total += line;
-        return '<tr><td>' + esc(l.name) + '</td><td>₹' + l.price.toFixed(2) + '</td><td>' + l.qty + '</td><td>₹' + line.toFixed(2) + '</td><td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="removeLine(' + i + ')">🗑️</button></td></tr>';
+        const m = allItems.find(x => x.id === l.id);
+        const maxStock = m ? m.quantity : l.qty;
+        return '<tr><td><b>' + esc(l.name) + '</b> <small style="color:#64748b;">(Max stock: ' + maxStock + ')</small></td>' +
+          '<td>₹' + l.price.toFixed(2) + '</td>' +
+          '<td><div style="display:flex; align-items:center; gap:6px;">' +
+            '<button class="gray" style="padding:2px 8px; font-size:12px;" onclick="updateBillQty(' + i + ', -1)">-</button>' +
+            '<b>' + l.qty + '</b>' +
+            '<button class="gray" style="padding:2px 8px; font-size:12px;" onclick="updateBillQty(' + i + ', 1)">+</button>' +
+          '</div></td>' +
+          '<td>₹' + line.toFixed(2) + '</td>' +
+          '<td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="removeLine(' + i + ')">🗑️</button></td></tr>';
       }).join('');
     }
     document.getElementById('billTotal').textContent = total.toFixed(2);
