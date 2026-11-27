@@ -800,14 +800,44 @@
         </div>
       </section>
 
-      <!-- STAFF TAB -->
+      <!-- STAFF MANAGEMENT & PERMISSIONS TAB -->
       <section id="tab-users" hidden>
         <div class="panel">
-          <h3>Staff Accounts &amp; Access Controls</h3>
+          <h3>👥 Staff Accounts &amp; Role Permissions Management</h3>
+          <p class="hint">Owner can assign Cashier or Inventory permissions, approve pending accounts, or remove staff.</p>
           <table>
             <thead><tr><th>User ID</th><th>Full Name</th><th>Phone</th><th>Email</th><th>Role</th><th>Permissions</th><th>Status</th><th>Action</th></tr></thead>
             <tbody id="userRows"></tbody>
           </table>
+        </div>
+
+        <!-- OWNER ADD STAFF DIRECTLY FORM (ALWAYS VISIBLE FOR OWNER) -->
+        <div class="panel owner-only">
+          <h3>➕ Add New Staff Account With Permissions</h3>
+          <form id="userForm">
+            <div class="form-grid">
+              <input name="username" placeholder="User ID (no spaces e.g. w102)" required>
+              <input name="name" placeholder="Full Name (e.g. Anish Sharma)" required>
+              <input name="phone" placeholder="Phone Number" required>
+              <input name="email" type="email" placeholder="Email Address" required>
+              <input name="password" type="password" placeholder="Password (min 6 chars)" required>
+              <select name="role">
+                <option value="WORKER">Worker</option>
+                <option value="OWNER">Owner</option>
+              </select>
+              <input name="permissions" type="hidden" id="addPermValue" value="billing,inventory">
+            </div>
+            <div style="margin:14px 0; display:flex; gap:20px; align-items:center; flex-wrap:wrap; background:#f0fdf4; padding:12px 16px; border-radius:10px; border:1px solid #bbf7d0;">
+              <b style="color:#047857;">Assign Role Permissions:</b>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="addPermBilling" checked onchange="updateAddPermValue()"> 💳 <b>Cashier Permission</b> (POS Orders &amp; Billing)
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="addPermInventory" checked onchange="updateAddPermValue()"> 📦 <b>Inventory Staff Permission</b> (Add/Edit Medicines &amp; Racks)
+              </label>
+            </div>
+            <button type="submit" class="accent" style="padding:10px 20px;">➕ Create Staff Account with Selected Permissions</button>
+          </form>
         </div>
       </section>
 
@@ -837,6 +867,28 @@
   </div>
 </div>
 
+<!-- OWNER PERMISSION EDIT MODAL -->
+<div id="permModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;" hidden>
+  <div style="background:#fff; padding:26px; border-radius:16px; width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.25); animation:popScale 0.25s ease;">
+    <h3 style="margin-top:0; color:#0f172a;">⚙️ Edit Staff Permissions</h3>
+    <p style="margin-bottom:14px; color:#475569;">Set access permissions for staff account <b id="permUserDisplay" style="color:#047857;"></b>:</p>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px; background:#f0fdf4; padding:16px; border-radius:10px; border:1px solid #bbf7d0;">
+      <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+        <input type="checkbox" id="chkCashier" value="billing" style="width:18px; height:18px;">
+        <span>💳 <b>Cashier Permission</b> (Process POS Sales &amp; Bills)</span>
+      </label>
+      <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+        <input type="checkbox" id="chkInventory" value="inventory" style="width:18px; height:18px;">
+        <span>📦 <b>Inventory Staff Permission</b> (Add/Edit Stock &amp; Racks)</span>
+      </label>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="gray" onclick="closePermModal()">❌ Cancel</button>
+      <button class="accent" onclick="savePermissions()">💾 Save Permissions</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let me = null;
   let allItems = [];
@@ -845,6 +897,7 @@
   let bill = [];
   let selectedSearchMed = null;
   let pendingStockWarn = null;
+  let activePermUser = null;
 
   let isDemoMode = false;
   let demoUsers = [
@@ -935,7 +988,41 @@
       return allItems;
     }
 
-    if (cleanUrl === '/api/users') return demoUsers;
+    if (cleanUrl === '/api/users') {
+      if (method === 'POST') {
+        const body = new URLSearchParams(options.body);
+        demoUsers.push({
+          username: body.get('username'),
+          name: body.get('name'),
+          phone: body.get('phone'),
+          email: body.get('email'),
+          role: body.get('role') || 'WORKER',
+          permissions: body.get('permissions') || 'billing,inventory',
+          approved: true,
+          password: body.get('password')
+        });
+        return { ok: true };
+      }
+      return demoUsers;
+    }
+
+    if (cleanUrl.includes('/approve')) {
+      const parts = cleanUrl.split('/');
+      const targetUser = parts[3];
+      const u = demoUsers.find(x => x.username === targetUser);
+      if (u) u.approved = true;
+      return { ok: true };
+    }
+
+    if (cleanUrl.includes('/permissions')) {
+      const parts = cleanUrl.split('/');
+      const targetUser = parts[3];
+      const body = new URLSearchParams(options.body);
+      const u = demoUsers.find(x => x.username === targetUser);
+      if (u) u.permissions = body.get('permissions') || '';
+      return { ok: true };
+    }
+
     if (cleanUrl === '/api/bills') return demoBills;
     if (cleanUrl === '/api/audit') return demoAudit;
     return { ok: true };
@@ -1535,15 +1622,116 @@
     } catch (e) { showMsg(e.message, false); }
   }
 
+  // ---------- STAFF & APPROVALS (owner) ----------
+  let activePermUser = null;
+
   async function loadUsers() {
     try {
       const list = await api('/api/users');
       document.getElementById('userRows').innerHTML = list.length
-        ? list.map(u => '<tr><td><b>' + esc(u.username) + '</b></td><td>' + esc(u.name || '-') + '</td><td>' + esc(u.phone || '-') + '</td><td>' + esc(u.email || '-') + '</td><td><span class="badge ' + u.role + '">' + u.role + '</span></td><td>' + esc(u.permissions) + '</td><td>' + (u.approved ? '<span class="badge OK">APPROVED</span>' : '<span class="badge PENDING">PENDING</span>') + '</td><td>' + (u.username === me.username ? '(you)' : '<button class="danger" style="padding:4px 8px;">Remove</button>') + '</td></tr>').join('')
+        ? list.map(u => {
+            const status = u.approved ? '<span class="badge OK">APPROVED</span>' : '<span class="badge PENDING">PENDING</span>';
+            const perms = (u.permissions || '').split(',').map(x => x.trim());
+            let permBadges = '';
+            if (u.role === 'OWNER') {
+              permBadges = '<span class="badge OWNER">👑 Full System Owner</span>';
+            } else {
+              if (perms.includes('billing')) permBadges += '<span class="badge" style="background:#2563eb; margin-right:4px;">💳 Cashier</span>';
+              if (perms.includes('inventory')) permBadges += '<span class="badge" style="background:#059669;">📦 Inventory Staff</span>';
+              if (!permBadges) permBadges = '<span class="badge" style="background:#6b7280;">No Access</span>';
+            }
+
+            let action = '';
+            if (u.username === me.username) action = '(you)';
+            else {
+              if (!u.approved) action += '<button style="padding:5px 10px; font-size:12px;" onclick="approveUser(this.dataset.u)" data-u="' + esc(u.username) + '">✅ Approve</button>';
+              if (u.role !== 'OWNER') {
+                action += '<button class="accent" style="padding:5px 10px; font-size:12px;" onclick="openPermModal(\'' + esc(u.username) + '\', \'' + esc(u.permissions || '') + '\')">⚙️ Permissions</button>';
+              }
+              action += '<button class="danger" style="padding:5px 10px; font-size:12px;" onclick="deleteUser(this.dataset.u)" data-u="' + esc(u.username) + '">🗑️ Remove</button>';
+            }
+
+            return '<tr>' +
+              '<td><b>' + esc(u.username) + '</b></td>' +
+              '<td>' + esc(u.name || '-') + '</td>' +
+              '<td>' + esc(u.phone || '-') + '</td>' +
+              '<td>' + esc(u.email || '-') + '</td>' +
+              '<td><span class="badge ' + u.role + '">' + u.role + '</span></td>' +
+              '<td>' + permBadges + '</td>' +
+              '<td>' + status + '</td>' +
+              '<td>' + action + '</td></tr>';
+          }).join('')
         : '<tr><td colspan="8">No staff accounts.</td></tr>';
     } catch (e) { showMsg(e.message, false); }
   }
 
+  function openPermModal(username, perms) {
+    activePermUser = username;
+    document.getElementById('permUserDisplay').textContent = username;
+    const list = (perms || '').split(',').map(x => x.trim());
+    document.getElementById('chkCashier').checked = list.includes('billing');
+    document.getElementById('chkInventory').checked = list.includes('inventory');
+    document.getElementById('permModal').hidden = false;
+  }
+
+  function closePermModal() {
+    activePermUser = null;
+    document.getElementById('permModal').hidden = true;
+  }
+
+  async function savePermissions() {
+    if (!activePermUser) return;
+    const selected = [];
+    if (document.getElementById('chkCashier').checked) selected.push('billing');
+    if (document.getElementById('chkInventory').checked) selected.push('inventory');
+    const permissions = selected.join(',');
+
+    try {
+      await api('/api/users/' + encodeURIComponent(activePermUser) + '/permissions', {
+        method: 'POST',
+        body: new URLSearchParams({ permissions })
+      });
+      showMsg('Permissions updated for ' + activePermUser, true);
+      closePermModal();
+      loadUsers();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  function updateAddPermValue() {
+    const p = [];
+    if (document.getElementById('addPermBilling').checked) p.push('billing');
+    if (document.getElementById('addPermInventory').checked) p.push('inventory');
+    document.getElementById('addPermValue').value = p.join(',');
+  }
+
+  async function approveUser(name) {
+    try {
+      await api('/api/users/' + encodeURIComponent(name) + '/approve', { method: 'POST' });
+      showMsg(name + ' approved.', true);
+      loadUsers();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  document.getElementById('userForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api('/api/users', { method: 'POST', body: new URLSearchParams(new FormData(e.target)) });
+      e.target.reset();
+      showMsg('Account created.', true);
+      loadUsers();
+    } catch (err) { showMsg(err.message, false); }
+  });
+
+  async function deleteUser(name) {
+    if (!confirm('Remove account "' + name + '"?')) return;
+    try {
+      await api('/api/users/' + encodeURIComponent(name), { method: 'DELETE' });
+      showMsg('Account removed.', true);
+      loadUsers();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  // ---------- ACTIVITY LOG (owner) ----------
   async function loadAudit() {
     try {
       const list = await api('/api/audit');
