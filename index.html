@@ -3,15 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Pharmacy Manager - Modern Operations Dashboard</title>
+<title>Pharmacy Management Dashboard UI</title>
 <style>
   :root {
     color-scheme: light;
-    --primary: #059669;
-    --primary-dark: #047857;
+    --sidebar-bg: #0f172a;
+    --sidebar-border: #1e293b;
+    --primary: #10b981;
+    --primary-dark: #059669;
     --primary-teal: #0d9488;
-    --accent: #2563eb;
-    --accent-hover: #1d4ed8;
+    --accent-blue: #2563eb;
+    --accent-cyan: #06b6d4;
     --danger: #ef4444;
     --warning: #f59e0b;
     --bg-main: #f8fafc;
@@ -20,11 +22,11 @@
     --text-dark: #0f172a;
     --text-muted: #64748b;
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 14px -2px rgba(0,0,0,0.08);
-    --shadow-lg: 0 12px 30px -6px rgba(0,0,0,0.12);
+    --shadow-md: 0 4px 12px -2px rgba(0,0,0,0.08);
+    --shadow-lg: 0 12px 28px -6px rgba(0,0,0,0.12);
     --radius-sm: 8px;
     --radius-md: 12px;
-    --radius-lg: 20px;
+    --radius-lg: 18px;
   }
 
   [hidden] { display: none !important; }
@@ -33,152 +35,191 @@
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     margin: 0;
-    background: radial-gradient(circle at 10% 10%, rgba(13, 148, 136, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 90%, rgba(37, 99, 235, 0.08) 0%, transparent 40%),
-                linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-    background-attachment: fixed;
+    background: #f8fafc;
     color: var(--text-dark);
     min-height: 100vh;
-    position: relative;
-    overflow-x: hidden;
   }
 
-  /* AMBIENT BACKGROUND GLOW ORBS */
-  .bg-orb {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(90px);
-    z-index: -1;
-    pointer-events: none;
-    opacity: 0.45;
-    animation: floatOrb 18s ease-in-out infinite alternate;
-  }
-  .orb-1 { top: -100px; left: -100px; width: 450px; height: 450px; background: radial-gradient(circle, rgba(16, 185, 129, 0.5) 0%, rgba(13, 148, 136, 0) 70%); }
-  .orb-2 { bottom: -100px; right: -100px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(37, 99, 235, 0.4) 0%, rgba(124, 58, 237, 0) 70%); animation-delay: -9s; }
-
-  @keyframes floatOrb {
-    0% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(60px, 40px) scale(1.1); }
-    100% { transform: translate(-40px, 80px) scale(0.95); }
-  }
-
+  /* KEYFRAME ANIMATIONS */
   @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes popScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
   @keyframes slideInDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* HEADER */
-  header {
-    background: linear-gradient(135deg, #059669 0%, #0d9488 50%, #2563eb 100%);
+  /* APP LAYOUT WITH DRIBBBLE SIDEBAR */
+  .app-container {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* SIDEBAR NAVIGATION */
+  .sidebar {
+    width: 260px;
+    background: var(--sidebar-bg);
+    color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 16px;
+    border-right: 1px solid var(--sidebar-border);
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    z-index: 100;
+  }
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 12px 24px;
+    border-bottom: 1px solid var(--sidebar-border);
+  }
+  .sidebar-logo h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
     color: #fff;
+    letter-spacing: -0.5px;
+  }
+  .sidebar-logo small {
+    display: block;
+    font-size: 11px;
+    color: #34d399;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 20px;
+  }
+  .sidebar-menu .tab {
+    background: none;
+    border: 0;
+    color: #94a3b8;
+    padding: 12px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+  }
+  .sidebar-menu .tab:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .sidebar-menu .tab.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  }
+
+  .sidebar-user {
+    padding: 16px 12px;
+    background: #1e293b;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--sidebar-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .user-info { display: flex; flex-direction: column; }
+  .user-info b { font-size: 13px; color: #fff; }
+  .user-info span { font-size: 11px; color: #94a3b8; }
+
+  /* MAIN CONTENT AREA */
+  .main-canvas {
+    margin-left: 260px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    background: #fff;
     padding: 16px 32px;
+    border-bottom: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    box-shadow: 0 4px 20px rgba(5, 150, 105, 0.25);
-    position: relative;
-    z-index: 10;
+    box-shadow: var(--shadow-sm);
+    sticky: top;
   }
-  header h1 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
+  .topbar-search {
     display: flex;
     align-items: center;
-    gap: 10px;
-  }
-  header div { display: flex; align-items: center; gap: 12px; }
-
-  #whoami {
-    background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(8px);
-    padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 700;
-    border: 1px solid rgba(255,255,255,0.3);
-    color: #fff;
-  }
-
-  /* NAVIGATION TAB BAR */
-  nav {
-    background: #ffffff;
-    padding: 8px 32px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
     gap: 8px;
-    box-shadow: var(--shadow-sm);
-    position: relative;
-    z-index: 10;
+    background: #f1f5f9;
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    width: 380px;
   }
-  nav .tab {
-    background: none;
-    color: var(--text-muted);
+  .topbar-search input {
     border: 0;
-    border-radius: var(--radius-sm);
-    padding: 10px 18px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    background: none;
+    outline: none;
+    width: 100%;
+    font-size: 13px;
+    margin: 0;
   }
-  nav .tab:hover {
-    color: var(--primary);
+
+  .clock-badge {
     background: #f0fdf4;
-  }
-  nav .tab.active {
-    background: linear-gradient(135deg, #059669, #0d9488);
-    color: #fff;
-    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.3);
+    color: #047857;
+    border: 1px solid #a7f3d0;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
   }
 
   main {
     padding: 28px;
-    max-width: 1380px;
-    margin: auto;
+    max-width: 1400px;
     animation: fadeInUp 0.35s ease-out;
   }
 
-  /* DASHBOARD HERO BANNER */
+  section { animation: fadeInUp 0.3s ease-out; }
+
+  /* HERO BANNER */
   .dash-hero {
-    background: linear-gradient(135deg, #047857 0%, #0d9488 50%, #1d4ed8 100%);
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #0d9488 100%);
     color: #fff;
     padding: 26px 30px;
     border-radius: var(--radius-lg);
     margin-bottom: 24px;
-    box-shadow: 0 10px 25px -5px rgba(5, 150, 105, 0.3);
-    animation: fadeInUp 0.4s ease-out;
+    box-shadow: var(--shadow-md);
     position: relative;
+    overflow: hidden;
   }
-  .clock-badge {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 8px 18px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-  }
-
   .quick-launcher { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
   .launch-btn {
-    background: rgba(255, 255, 255, 0.2) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
     backdrop-filter: blur(4px);
-    border: 1px solid rgba(255, 255, 255, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
     color: #fff !important;
     font-size: 13px !important;
-    padding: 9px 16px !important;
+    padding: 8px 16px !important;
     border-radius: 20px !important;
     box-shadow: none !important;
     font-weight: 700 !important;
   }
   .launch-btn:hover {
-    background: rgba(255, 255, 255, 0.35) !important;
+    background: rgba(16, 185, 129, 0.3) !important;
+    border-color: #34d399 !important;
     transform: translateY(-2px) !important;
   }
 
-  /* CARDS */
+  /* DRIBBBLE METRIC STAT CARDS */
   .cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
   .card {
     background: #fff;
@@ -212,12 +253,7 @@
     margin-bottom: 24px;
     transition: all 0.2s ease;
   }
-  .panel h3 {
-    margin-top: 0;
-    color: var(--text-dark);
-    font-size: 19px;
-    font-weight: 800;
-  }
+  .panel h3 { margin-top: 0; color: var(--text-dark); font-size: 18px; font-weight: 800; }
 
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   @media (max-width: 850px) { .grid2 { grid-template-columns: 1fr; } }
@@ -238,7 +274,7 @@
   }
   .shelf-card:hover {
     background: #fff;
-    border-color: #059669;
+    border-color: #10b981;
     transform: translateY(-3px);
     box-shadow: var(--shadow-md);
   }
@@ -263,20 +299,20 @@
   }
   input:focus, select:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.18);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
   }
 
   button {
     padding: 10px 18px;
     border: 0;
     border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, #059669, #0d9488);
+    background: linear-gradient(135deg, #10b981, #059669);
     color: #fff;
     cursor: pointer;
     margin: 3px;
     font-weight: 700;
     font-size: 13px;
-    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
@@ -284,11 +320,11 @@
   }
   button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
     filter: brightness(1.05);
   }
   button:active { transform: translateY(0); }
-  button.warn { background: linear-gradient(135deg, #d97706, #b45309); box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25); }
+  button.warn { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25); }
   button.danger { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25); }
   button.gray { background: linear-gradient(135deg, #64748b, #475569); box-shadow: 0 2px 6px rgba(100, 116, 139, 0.2); }
   button.accent { background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25); }
@@ -373,7 +409,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at 20% 20%, #047857 0%, #0d9488 50%, #1e293b 100%);
+    background: radial-gradient(circle at 20% 20%, #0f172a 0%, #1e293b 60%, #059669 100%);
     padding: 20px;
   }
   .login-box {
@@ -392,7 +428,7 @@
   .err { color: #dc2626; margin-top: 10px; min-height: 20px; font-weight: 600; font-size: 13px; }
 
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
-  .total { font-size: 24px; font-weight: 800; margin: 16px 0; color: #047857; }
+  .total { font-size: 24px; font-weight: 800; margin: 16px 0; color: #059669; }
   .receipt {
     font-family: ui-monospace, SFMono-Regular, monospace;
     white-space: pre;
@@ -439,24 +475,20 @@
 </head>
 <body>
 
-<!-- AMBIENT BACKGROUND GLOW ORBS -->
-<div class="bg-orb orb-1"></div>
-<div class="bg-orb orb-2"></div>
-
 <!-- LOGIN / SIGN UP -->
 <div id="login" class="login-wrap" hidden>
   <form id="loginForm" class="login-box">
-    <h2 style="margin-top:0">🔑 Pharmacy Login</h2>
-    <p class="hint" style="margin-top:0; margin-bottom:14px;">Operational Access &amp; Inventory Management</p>
+    <h2 style="margin-top:0">🔑 PharmaCare Access</h2>
+    <p class="hint" style="margin-top:0; margin-bottom:14px;">Pharmacy Management Dashboard System</p>
     <input name="username" placeholder="User ID" required autocomplete="username">
     <input name="password" type="password" placeholder="Password" required autocomplete="current-password">
-    <button type="submit">Log In to Dashboard</button>
+    <button type="submit">Sign In to Dashboard</button>
     <div class="err" id="loginMsg"></div>
     <p class="hint" style="margin-top:16px;">New staff member? <a href="#" onclick="toggleSignup(event)">Create an account</a></p>
   </form>
 
   <form id="signupForm" class="login-box" hidden style="width:380px;">
-    <h2 style="margin-top:0">📝 Create Staff Account</h2>
+    <h2 style="margin-top:0">📝 Staff Registration</h2>
     <input name="username" placeholder="User ID (no spaces e.g. w101)" required autocomplete="username">
     <input name="name" placeholder="Full Name (e.g. Rajesh Kumar)" required>
     <input name="phone" placeholder="Phone Number" required>
@@ -469,281 +501,312 @@
   </form>
 </div>
 
-<!-- MAIN APP -->
-<div id="app" hidden>
-  <header>
-    <h1>💊 Pharmacy Manager</h1>
+<!-- MAIN DRIBBBLE APP LAYOUT -->
+<div id="app" class="app-container" hidden>
+
+  <!-- LEFT DRIBBBLE SIDEBAR -->
+  <aside class="sidebar">
     <div>
-      <span id="whoami"></span>
-      <button class="gray" onclick="logout()">🚪 Log out</button>
+      <div class="sidebar-logo">
+        <span style="font-size:28px;">💊</span>
+        <div>
+          <h1>PharmaCare</h1>
+          <small>Pharmacy OS v2.4</small>
+        </div>
+      </div>
+
+      <nav class="sidebar-menu">
+        <button class="tab active" data-tab="dashboard">📊 <span>Dashboard</span></button>
+        <button class="tab perm-billing" data-tab="billing">💳 <span>POS &amp; Billing</span></button>
+        <button class="tab perm-billing" data-tab="bills">🧾 <span>Bills History</span></button>
+        <button class="tab perm-inventory" data-tab="medicines">💊 <span>Medicines &amp; Racks</span></button>
+        <button class="tab owner-only" data-tab="users">👥 <span>Staff &amp; Access</span></button>
+        <button class="tab owner-only" data-tab="audit">📜 <span>Activity Audit</span></button>
+      </nav>
     </div>
-  </header>
-  <nav>
-    <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
-    <button class="tab perm-billing" data-tab="billing">💳 Billing</button>
-    <button class="tab perm-billing" data-tab="bills">🧾 Bills History</button>
-    <button class="tab perm-inventory" data-tab="medicines">💊 Medicines &amp; Racks</button>
-    <button class="tab owner-only" data-tab="users">👥 Staff &amp; Approvals</button>
-    <button class="tab owner-only" data-tab="audit">📜 Activity Log</button>
-  </nav>
 
-  <main>
-    <div id="msg" hidden></div>
-
-    <!-- DASHBOARD -->
-    <section id="tab-dashboard">
-      <!-- DASHBOARD HERO BANNER -->
-      <div class="dash-hero">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-          <div>
-            <h2 style="margin:0; font-size:24px;">👋 Welcome back, <b id="dashUser" style="color:#a7f3d0;">Staff</b></h2>
-            <p style="margin:4px 0 0; opacity:0.95; font-size:14px;">Here is your live pharmacy inventory analytics &amp; stock overview.</p>
-          </div>
-          <div id="liveClock" class="clock-badge">🕒 Loading clock...</div>
-        </div>
-
-        <!-- QUICK ACTION LAUNCHER BUTTONS -->
-        <div class="quick-launcher">
-          <button class="launch-btn perm-billing" onclick="showTab('billing')">⚡ New POS Bill</button>
-          <button class="launch-btn perm-inventory" onclick="showTab('medicines'); setTimeout(() => document.getElementById('locateBox').focus(), 100);">🔍 Find Rack / Shelf</button>
-          <button class="launch-btn perm-inventory" onclick="showTab('medicines')">📦 Manage Medicines</button>
-          <button class="launch-btn owner-only" onclick="showTab('users')">👥 Staff Approvals</button>
-        </div>
-
-        <div id="stockHealthMeter" style="margin-top:18px;"></div>
+    <!-- SIDEBAR USER FOOTER -->
+    <div class="sidebar-user">
+      <div class="user-info">
+        <b id="sidebarUserName">User ID</b>
+        <span id="whoami">Role</span>
       </div>
+      <button class="danger" style="padding:6px 10px; font-size:11px;" onclick="logout()">Logout</button>
+    </div>
+  </aside>
 
-      <div class="cards" id="cards"></div>
+  <!-- MAIN CANVAS -->
+  <div class="main-canvas">
 
-      <!-- 2D STORE FLOOR PLAN GRID -->
-      <div class="panel">
-        <h3>🗺️ 2D Pharmacy Floor Plan &amp; Rack Locations</h3>
-        <p class="hint">Physical store layout &amp; active rack inventory status:</p>
-        <div class="floor-plan-grid">
-          <div class="shelf-card">
-            <h4><span>📦 Rack A</span> <span class="badge OK">Fast-Moving</span></h4>
-            <div style="font-size:12px; color:#64748b; margin-bottom:8px;">📍 Analgesics &amp; Antipyretics Zone (Front Left)</div>
-            <div style="font-size:13px;">Items: <b>Paracetamol, Amoxicillin, Metformin</b></div>
-          </div>
-          <div class="shelf-card">
-            <h4><span>📦 Rack B</span> <span class="badge OK">Cold &amp; Flu</span></h4>
-            <div style="font-size:12px; color:#64748b; margin-bottom:8px;">📍 Anti-Inflammatory &amp; Syrups (Front Right)</div>
-            <div style="font-size:13px;">Items: <b>Ibuprofen, Cough Syrup, Omeprazole</b></div>
-          </div>
-          <div class="shelf-card">
-            <h4><span>❄️ Cold Storage</span> <span class="badge OK">2°C – 8°C</span></h4>
-            <div style="font-size:12px; color:#64748b; margin-bottom:8px;">📍 Refrigerator Biologicals (Rear Left)</div>
-            <div style="font-size:13px;">Items: <b>Insulin Glargine, Biological Serums</b></div>
-          </div>
-          <div class="shelf-card">
-            <h4><span>📦 Rack C &amp; D</span> <span class="badge OK">Supplies &amp; Vitamins</span></h4>
-            <div style="font-size:12px; color:#64748b; margin-bottom:8px;">📍 Medical Supplies &amp; Supplements (Rear Right)</div>
-            <div style="font-size:13px;">Items: <b>Surgical Gloves, Syringes, Vitamin C</b></div>
-          </div>
-        </div>
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-search">
+        <span>🔍</span>
+        <input placeholder="Search medicines, barcodes, racks, shelves..." oninput="document.getElementById('search').value=this.value; renderRows();">
       </div>
+      <div style="display:flex; align-items:center; gap:16px;">
+        <div id="liveClock" class="clock-badge">🕒 Loading clock...</div>
+      </div>
+    </header>
 
-      <div class="grid2">
+    <main>
+      <div id="msg" hidden></div>
+
+      <!-- DASHBOARD -->
+      <section id="tab-dashboard">
+        <!-- HERO BANNER -->
+        <div class="dash-hero">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h2 style="margin:0; font-size:24px;">👋 Welcome back, <b id="dashUser" style="color:#34d399;">Staff</b></h2>
+              <p style="margin:4px 0 0; opacity:0.9; font-size:14px;">Here is your live pharmacy analytics, inventory health &amp; rack overview.</p>
+            </div>
+          </div>
+
+          <!-- QUICK ACTION LAUNCHER BUTTONS -->
+          <div class="quick-launcher">
+            <button class="launch-btn perm-billing" onclick="showTab('billing')">⚡ Complete Sale (POS)</button>
+            <button class="launch-btn perm-inventory" onclick="showTab('medicines'); setTimeout(() => document.getElementById('locateBox').focus(), 100);">🔍 Locate Rack / Shelf</button>
+            <button class="launch-btn perm-inventory" onclick="showTab('medicines')">📦 Add Batch Inventory</button>
+            <button class="launch-btn owner-only" onclick="showTab('users')">👥 Manage Staff Access</button>
+          </div>
+
+          <div id="stockHealthMeter" style="margin-top:16px;"></div>
+        </div>
+
+        <!-- METRIC CARDS -->
+        <div class="cards" id="cards"></div>
+
+        <!-- 2D STORE FLOOR PLAN GRID -->
         <div class="panel">
-          <h3>🚨 Expired or Expiring Alerts</h3>
-          <ul class="alerts" id="alertExpiry"></ul>
+          <h3>🗺️ 2D Pharmacy Floor Plan &amp; Storage Zones</h3>
+          <p class="hint">Physical store layout &amp; active rack inventory status:</p>
+          <div class="floor-plan-grid">
+            <div class="shelf-card">
+              <h4><span>📦 Rack A</span> <span class="badge OK">Fast-Moving</span></h4>
+              <div style="font-size:12px; color:#64748b; margin-bottom:8px;">📍 Analgesics &amp; Antipyretics Zone (Front Left)</div>
+              <div style="font-size:13px;">Items: <b>Paracetamol, Amoxicillin, Metformin</b></div>
+            </div>
+            <div class="shelf-card">
+              <h4><span>📦 Rack B</span> <span class="badge OK">Cold &amp; Flu</span></h4>
+              <div style="font-size:12px; color:#64748b; margin-bottom:8px;">📍 Anti-Inflammatory &amp; Syrups (Front Right)</div>
+              <div style="font-size:13px;">Items: <b>Ibuprofen, Cough Syrup, Omeprazole</b></div>
+            </div>
+            <div class="shelf-card">
+              <h4><span>❄️ Cold Storage</span> <span class="badge OK">2°C – 8°C</span></h4>
+              <div style="font-size:12px; color:#64748b; margin-bottom:8px;">📍 Refrigerator Biologicals (Rear Left)</div>
+              <div style="font-size:13px;">Items: <b>Insulin Glargine, Biological Serums</b></div>
+            </div>
+            <div class="shelf-card">
+              <h4><span>📦 Rack C &amp; D</span> <span class="badge OK">Supplies &amp; Vitamins</span></h4>
+              <div style="font-size:12px; color:#64748b; margin-bottom:8px;">📍 Medical Supplies &amp; Supplements (Rear Right)</div>
+              <div style="font-size:13px;">Items: <b>Surgical Gloves, Syringes, Vitamin C</b></div>
+            </div>
+          </div>
         </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <h3>🚨 Expired or Expiring Alerts</h3>
+            <ul class="alerts" id="alertExpiry"></ul>
+          </div>
+          <div class="panel">
+            <h3>📉 Low Stock Reorder Alerts</h3>
+            <ul class="alerts" id="alertLow"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- BILLING -->
+      <section id="tab-billing" hidden>
         <div class="panel">
-          <h3>📉 Low Stock Reorder Alerts</h3>
-          <ul class="alerts" id="alertLow"></ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- BILLING -->
-    <section id="tab-billing" hidden>
-      <div class="panel">
-        <h3>💳 New Bill &amp; Checkout</h3>
-        <div class="toolbar">
-          <input id="customer" placeholder="Customer name (optional)" style="width:280px">
-        </div>
-
-        <!-- BARCODE QUICK SCANNER FOR BILLING -->
-        <div class="toolbar" style="background:#e0f2fe; padding:12px; border-radius:8px; border:1px solid #bae6fd;">
-          <b style="color:#0369a1;">🏷️ Quick Barcode / ID Scan:</b>
-          <input id="scanAddBox" placeholder="Scan barcode or type ID & press Enter" style="width:300px" onkeydown="if(event.key==='Enter'){scanAddToBill();}">
-          <button class="accent" onclick="scanAddToBill()">Add to Bill</button>
-        </div>
-
-        <div class="toolbar" style="margin-top:12px">
-          <select id="pickMed" style="width:340px"></select>
-          <input id="pickQty" type="number" min="1" value="1" style="width:90px">
-          <button onclick="addLine()">Add to bill</button>
-        </div>
-        <table>
-          <thead><tr><th>Medicine</th><th>Price</th><th>Qty</th><th>Line Total</th><th></th></tr></thead>
-          <tbody id="billRows"><tr><td colspan="5">No medicines added yet.</td></tr></tbody>
-        </table>
-        <div class="total">Total: ₹<span id="billTotal">0.00</span></div>
-        <button onclick="saveBill()">Save bill &amp; reduce stock</button>
-        <button class="gray" onclick="clearBill()">Clear bill</button>
-        <div id="receipt" class="receipt" hidden></div>
-      </div>
-    </section>
-
-    <!-- BILLS HISTORY -->
-    <section id="tab-bills" hidden>
-      <div class="panel">
-        <h3>🧾 Saved Bills &amp; Cashier Tracking</h3>
-        <table>
-          <thead><tr><th>Bill #</th><th>Date</th><th>Customer</th><th>Cashier / Worker Name</th><th>Total</th><th>Action</th></tr></thead>
-          <tbody id="billHistory"></tbody>
-        </table>
-      </div>
-    </section>
-
-    <!-- MEDICINES & RACK LOCATIONS -->
-    <section id="tab-medicines" hidden>
-
-      <!-- BARCODE & RACK SEARCH SECTION -->
-      <div class="locate-panel">
-        <h3 style="margin-top:0; color:#065f46;">🔍 Barcode &amp; Rack Location Finder</h3>
-        <p class="hint" style="margin-top:0; margin-bottom:8px;">Scan any barcode, enter a Rack Number (e.g. <code>Rack A</code>), Row, ID, or medicine name to instantly locate the shelf position.</p>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <input id="locateBox" placeholder="Scan barcode or type Rack, Row, ID, or Name..." style="width:420px;"
-                 oninput="locate()" onkeydown="if(event.key==='Enter'){locate();}">
-          <button onclick="locate()">Search Location</button>
-          <button class="gray" onclick="document.getElementById('locateBox').value=''; locate();">Clear</button>
-        </div>
-        <div id="locateResult" class="locate-results"></div>
-      </div>
-
-      <!-- ADD / EDIT MEDICINE FORM -->
-      <div class="panel">
-        <h3 id="formTitle" style="margin-top:0">Add new medicine</h3>
-        <form id="medForm">
-          <div class="form-grid">
-            <input name="id" placeholder="ID (e.g. M011)" required>
-            <input name="name" placeholder="Medicine Name" required>
-            <input name="category" placeholder="Category" required>
-            <input name="supplier" placeholder="Supplier">
-            <input name="quantity" type="number" min="0" placeholder="Quantity" required>
-            <input name="reorderLevel" type="number" min="0" placeholder="Reorder level" required>
-            <input name="expiry" type="date" required>
-            <input name="price" type="number" step="0.01" min="0" placeholder="Unit price (₹)" required>
-            <input class="owner-only" name="barcode" placeholder="🏷️ Barcode (Owner only)" style="border-color:#0284c7;">
-            <input class="owner-only" name="rack" placeholder="📦 Rack No. (Owner only)" style="border-color:#0284c7;">
-            <input class="owner-only" name="row" placeholder="🔢 Row / Shelf (Owner only)" style="border-color:#4f46e5;">
-            <input class="owner-only" name="location" placeholder="📍 Location Notes (Owner only)" style="grid-column: span 2;">
+          <h3>💳 Point of Sale &amp; Dispensing</h3>
+          <div class="toolbar">
+            <input id="customer" placeholder="Patient / Customer Name (optional)" style="width:280px">
           </div>
-          <div class="hint worker-note" style="margin-top:6px; color:#d97706; font-weight:bold;" hidden>
-            🔒 Note: Adding or editing Barcode, Rack Number, Row, and Location requires Owner access.
+
+          <!-- BARCODE QUICK SCANNER FOR BILLING -->
+          <div class="toolbar" style="background:#e0f2fe; padding:12px; border-radius:8px; border:1px solid #bae6fd;">
+            <b style="color:#0369a1;">🏷️ Quick Barcode / QR Scan:</b>
+            <input id="scanAddBox" placeholder="Scan barcode or type ID & press Enter" style="width:300px" onkeydown="if(event.key==='Enter'){scanAddToBill();}">
+            <button class="accent" onclick="scanAddToBill()">Add to Bill</button>
           </div>
-          <button type="submit" id="saveBtn">Add medicine</button>
-          <button type="button" class="gray" onclick="resetForm()">Clear form</button>
-        </form>
-      </div>
 
-      <!-- MEDICINE LIST TABLE & FILTERS -->
-      <div class="panel">
-        <h3>Medicine Inventory &amp; Storage Locations</h3>
-        <div class="toolbar">
-          <input id="search" placeholder="Search barcode, rack, row, name, category, supplier, or ID" oninput="renderRows()" style="width:360px">
-          <select id="rackFilter" onchange="renderRows()">
-            <option value="">All Racks</option>
-          </select>
-          <select id="filter" onchange="renderRows()">
-            <option value="">All statuses</option>
-            <option value="LOW">Low stock only</option>
-            <option value="EXPIRING">Expired or expiring soon</option>
-          </select>
+          <div class="toolbar" style="margin-top:12px">
+            <select id="pickMed" style="width:340px"></select>
+            <input id="pickQty" type="number" min="1" value="1" style="width:90px">
+            <button onclick="addLine()">Add to bill</button>
+          </div>
+          <table>
+            <thead><tr><th>Medicine</th><th>Unit Price</th><th>Qty</th><th>Line Total</th><th>Action</th></tr></thead>
+            <tbody id="billRows"><tr><td colspan="5">No medicines added yet.</td></tr></tbody>
+          </table>
+          <div class="total">Total Amount: ₹<span id="billTotal">0.00</span></div>
+          <button onclick="saveBill()">Complete Sale &amp; Reduce Stock</button>
+          <button class="gray" onclick="clearBill()">Clear Bill</button>
+          <div id="receipt" class="receipt" hidden></div>
         </div>
-        <p class="hint">Stock In = delivery received. Stock Out = manual correction. Billing reduces stock automatically.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Barcode</th>
-              <th>Name</th>
-              <th>Rack</th>
-              <th>Row / Shelf</th>
-              <th>Category</th>
-              <th>Qty</th>
-              <th>Reorder</th>
-              <th>Expiry</th>
-              <th>Price</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="rows"></tbody>
-        </table>
-      </div>
-    </section>
+      </section>
 
-    <!-- STAFF & APPROVALS (owner only) -->
-    <section id="tab-users" hidden>
-      <div class="panel">
-        <h3>Staff accounts and approvals</h3>
-        <p class="hint">Accounts marked PENDING cannot log in until you approve them.</p>
-        <table>
-          <thead><tr><th>User ID</th><th>Full Name</th><th>Phone Number</th><th>Email</th><th>Role</th><th>Permissions</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="userRows"></tbody>
-        </table>
-      </div>
-      <div class="panel">
-        <h3>Add staff account directly</h3>
-        <form id="userForm">
-          <div class="form-grid">
-            <input name="username" placeholder="User ID (no spaces)" required>
-            <input name="name" placeholder="Full Name" required>
-            <input name="phone" placeholder="Phone Number" required>
-            <input name="email" type="email" placeholder="Email Address" required>
-            <input name="password" type="password" placeholder="Password (min 6 chars)" required>
-            <select name="role">
-              <option value="WORKER">Worker</option>
-              <option value="OWNER">Owner</option>
+      <!-- BILLS HISTORY -->
+      <section id="tab-bills" hidden>
+        <div class="panel">
+          <h3>🧾 Transaction Audit Trail &amp; Cashier Log</h3>
+          <table>
+            <thead><tr><th>Invoice #</th><th>Date &amp; Time</th><th>Customer</th><th>Cashier / Dispenser</th><th>Total Amount</th><th>Action</th></tr></thead>
+            <tbody id="billHistory"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MEDICINES & RACK LOCATIONS -->
+      <section id="tab-medicines" hidden>
+
+        <!-- BARCODE & RACK SEARCH SECTION -->
+        <div class="locate-panel">
+          <h3 style="margin-top:0; color:#065f46;">🔍 Barcode &amp; Shelf Location Finder</h3>
+          <p class="hint" style="margin-top:0; margin-bottom:8px;">Scan barcode or type Rack Number (e.g. <code>Rack A</code>), Row, ID, or Medicine Name to locate physical shelf position.</p>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="locateBox" placeholder="Scan barcode or type Rack, Row, ID, or Name..." style="width:420px;"
+                   oninput="locate()" onkeydown="if(event.key==='Enter'){locate();}">
+            <button onclick="locate()">Search Location</button>
+            <button class="gray" onclick="document.getElementById('locateBox').value=''; locate();">Clear</button>
+          </div>
+          <div id="locateResult" class="locate-results"></div>
+        </div>
+
+        <!-- ADD / EDIT MEDICINE FORM -->
+        <div class="panel">
+          <h3 id="formTitle" style="margin-top:0">Add New Medicine / Equipment</h3>
+          <form id="medForm">
+            <div class="form-grid">
+              <input name="id" placeholder="Medicine ID (e.g. M011)" required>
+              <input name="name" placeholder="Medicine / Item Name" required>
+              <input name="category" placeholder="Category" required>
+              <input name="supplier" placeholder="Manufacturer / Supplier">
+              <input name="quantity" type="number" min="0" placeholder="Quantity" required>
+              <input name="reorderLevel" type="number" min="0" placeholder="Reorder Level" required>
+              <input name="expiry" type="date" required>
+              <input name="price" type="number" step="0.01" min="0" placeholder="Unit Price (₹)" required>
+              <input class="owner-only" name="barcode" placeholder="🏷️ Barcode (Owner only)" style="border-color:#0284c7;">
+              <input class="owner-only" name="rack" placeholder="📦 Rack No. (Owner only)" style="border-color:#0284c7;">
+              <input class="owner-only" name="row" placeholder="🔢 Row / Shelf (Owner only)" style="border-color:#4f46e5;">
+              <input class="owner-only" name="location" placeholder="📍 Location Notes (Owner only)" style="grid-column: span 2;">
+            </div>
+            <div class="hint worker-note" style="margin-top:6px; color:#d97706; font-weight:bold;" hidden>
+              🔒 Note: Adding or editing Barcode, Rack Number, Row, and Location requires Owner access.
+            </div>
+            <button type="submit" id="saveBtn">Add Item to Inventory</button>
+            <button type="button" class="gray" onclick="resetForm()">Clear Form</button>
+          </form>
+        </div>
+
+        <!-- MEDICINE LIST TABLE & FILTERS -->
+        <div class="panel">
+          <h3>Catalogue &amp; Inventory Management</h3>
+          <div class="toolbar">
+            <input id="search" placeholder="Search barcode, rack, row, name, category, supplier, or ID" oninput="renderRows()" style="width:360px">
+            <select id="rackFilter" onchange="renderRows()">
+              <option value="">All Racks</option>
             </select>
-            <input name="permissions" type="hidden" id="addPermValue" value="billing,inventory">
+            <select id="filter" onchange="renderRows()">
+              <option value="">All statuses</option>
+              <option value="LOW">Low stock only</option>
+              <option value="EXPIRING">Expired or expiring soon</option>
+            </select>
           </div>
-          <div style="margin:10px 0; display:flex; gap:16px; align-items:center;">
-            <b>Assigned Permissions:</b>
-            <label><input type="checkbox" id="addPermBilling" checked onchange="updateAddPermValue()"> 💳 Cashier (Billing)</label>
-            <label><input type="checkbox" id="addPermInventory" checked onchange="updateAddPermValue()"> 📦 Inventory Staff</label>
+          <p class="hint">Stock In = delivery received. Stock Out = manual correction. Dispensing reduces stock automatically.</p>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Barcode</th>
+                <th>Name</th>
+                <th>Rack</th>
+                <th>Row / Shelf</th>
+                <th>Category</th>
+                <th>Qty</th>
+                <th>Reorder</th>
+                <th>Expiry</th>
+                <th>Price</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- STAFF & APPROVALS (owner only) -->
+      <section id="tab-users" hidden>
+        <div class="panel">
+          <h3>Staff Accounts &amp; Approvals Management</h3>
+          <p class="hint">Accounts marked PENDING cannot log in until approved by the owner.</p>
+          <table>
+            <thead><tr><th>User ID</th><th>Full Name</th><th>Phone Number</th><th>Email</th><th>Role</th><th>Permissions</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+        <div class="panel">
+          <h3>Add Staff Account Directly</h3>
+          <form id="userForm">
+            <div class="form-grid">
+              <input name="username" placeholder="User ID (no spaces)" required>
+              <input name="name" placeholder="Full Name" required>
+              <input name="phone" placeholder="Phone Number" required>
+              <input name="email" type="email" placeholder="Email Address" required>
+              <input name="password" type="password" placeholder="Password (min 6 chars)" required>
+              <select name="role">
+                <option value="WORKER">Worker</option>
+                <option value="OWNER">Owner</option>
+              </select>
+              <input name="permissions" type="hidden" id="addPermValue" value="billing,inventory">
+            </div>
+            <div style="margin:10px 0; display:flex; gap:16px; align-items:center;">
+              <b>Assigned Role Permissions:</b>
+              <label><input type="checkbox" id="addPermBilling" checked onchange="updateAddPermValue()"> 💳 Cashier (Billing)</label>
+              <label><input type="checkbox" id="addPermInventory" checked onchange="updateAddPermValue()"> 📦 Inventory Staff</label>
+            </div>
+            <button type="submit">Create Staff Account</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- PERMISSION MANAGEMENT MODAL (Owner only) -->
+      <div id="permModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:999;" hidden>
+        <div style="background:#fff; padding:24px; border-radius:10px; width:400px; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
+          <h3 style="margin-top:0">Manage Staff Permissions</h3>
+          <p style="margin-bottom:12px; color:#4b5563;">Set roles &amp; specific permissions for <b id="permUserDisplay" style="color:#0a7f6b;"></b>:</p>
+          <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px; background:#f9fafb; padding:14px; border-radius:6px; border:1px solid #e5e7eb;">
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <input type="checkbox" id="chkCashier" value="billing" style="width:18px; height:18px;">
+              <span>💳 <b>Cashier</b> (Billing &amp; Process Receipts)</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+              <input type="checkbox" id="chkInventory" value="inventory" style="width:18px; height:18px;">
+              <span>📦 <b>Inventory Staff</b> (Add Medicines, Equipment &amp; Update Stock)</span>
+            </label>
           </div>
-          <button type="submit">Create account</button>
-        </form>
-      </div>
-    </section>
-
-    <!-- PERMISSION MANAGEMENT MODAL (Owner only) -->
-    <div id="permModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:999;" hidden>
-      <div style="background:#fff; padding:24px; border-radius:10px; width:400px; box-shadow:0 4px 16px rgba(0,0,0,0.2);">
-        <h3 style="margin-top:0">Manage Staff Permissions</h3>
-        <p style="margin-bottom:12px; color:#4b5563;">Set roles &amp; specific permissions for <b id="permUserDisplay" style="color:#0a7f6b;"></b>:</p>
-        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px; background:#f9fafb; padding:14px; border-radius:6px; border:1px solid #e5e7eb;">
-          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-            <input type="checkbox" id="chkCashier" value="billing" style="width:18px; height:18px;">
-            <span>💳 <b>Cashier</b> (Billing &amp; Process Receipts)</span>
-          </label>
-          <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-            <input type="checkbox" id="chkInventory" value="inventory" style="width:18px; height:18px;">
-            <span>📦 <b>Inventory Staff</b> (Add Medicines, Equipment &amp; Update Stock)</span>
-          </label>
-        </div>
-        <div style="display:flex; gap:8px; justify-content:flex-end;">
-          <button class="gray" onclick="closePermModal()">Cancel</button>
-          <button class="accent" onclick="savePermissions()">Save Permissions</button>
+          <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button class="gray" onclick="closePermModal()">Cancel</button>
+            <button class="accent" onclick="savePermissions()">Save Permissions</button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- ACTIVITY LOG (owner only) -->
-    <section id="tab-audit" hidden>
-      <div class="panel">
-        <h3>Activity log (latest 200)</h3>
-        <table>
-          <thead><tr><th>Date</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
-          <tbody id="auditRows"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
+      <!-- ACTIVITY LOG (owner only) -->
+      <section id="tab-audit" hidden>
+        <div class="panel">
+          <h3>System Operations Log (Latest 200)</h3>
+          <table>
+            <thead><tr><th>Date &amp; Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+            <tbody id="auditRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
 </div>
 
 <script>
@@ -955,9 +1018,12 @@
   }
 
   function showApp() {
-    document.getElementById('login').hidden = true;
+    document.getElementById('login').hidden = false;
     document.getElementById('app').hidden = false;
-    document.getElementById('whoami').textContent = me.username + ' (' + me.role + ')';
+
+    const nameDisplay = me.name ? me.name : me.username;
+    document.getElementById('sidebarUserName').textContent = nameDisplay;
+    document.getElementById('whoami').textContent = me.role;
 
     document.querySelectorAll('.owner-only').forEach(el => el.hidden = me.role !== 'OWNER');
     document.querySelectorAll('.worker-note').forEach(el => el.hidden = me.role === 'OWNER');
@@ -1092,10 +1158,10 @@
     }
 
     document.getElementById('cards').innerHTML =
-      card('💊 Medicines', allItems.length, '#059669') +
+      card('💊 Medicines', allItems.length, '#10b981') +
       card('📦 Total units', units, '#0284c7') +
       card('💰 Stock value', '₹' + value.toFixed(2), '#2563eb') +
-      card('⚠️ Low stock', low, '#ea580c') +
+      card('⚠️ Low stock', low, '#f59e0b') +
       card('🚨 Expired / expiring', exp, '#ef4444');
 
     const expList = allItems.filter(m => m.expiryAlert);
