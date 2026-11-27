@@ -468,13 +468,13 @@
 </head>
 <body>
 
-<!-- LOGIN / SIGN UP -->
-<div id="login" class="login-wrap" hidden>
+<!-- LOGIN / SIGN UP (VISIBLE BY DEFAULT AS SAFE FALLBACK) -->
+<div id="login" class="login-wrap">
   <form id="loginForm" class="login-box">
     <h2 style="margin-top:0">🔑 PharmaCare Login</h2>
     <p class="hint" style="margin-top:0; margin-bottom:14px;">Pharmacy Management System</p>
-    <input name="username" placeholder="User ID" required autocomplete="username">
-    <input name="password" type="password" placeholder="Password" required autocomplete="current-password">
+    <input name="username" placeholder="User ID (owner / worker)" required autocomplete="username">
+    <input name="password" type="password" placeholder="Password (owner123 / worker123)" required autocomplete="current-password">
     <button type="submit">🔒 Sign In to Dashboard</button>
     <div class="err" id="loginMsg" style="color:red; margin-top:10px;"></div>
     <p class="hint" style="margin-top:16px;">New staff member? <a href="#" onclick="toggleSignup(event)">Create account</a></p>
@@ -514,7 +514,7 @@
       <div class="nav-section-title">Management</div>
       <nav class="sidebar-menu">
         <button class="tab perm-billing" data-tab="bills">💳 <span>Payments &amp; Bills</span></button>
-        <button class="tab owner-only" data-tab="users">👥 <span>Staff &amp; Customers</span></button>
+        <button class="tab owner-only" data-tab="users">👥 <span>Staff &amp; Access</span></button>
         <button class="tab owner-only" data-tab="audit">⚙️ <span>System Logs</span></button>
       </nav>
     </div>
@@ -934,9 +934,8 @@
     const cleanUrl = url.split('?')[0];
 
     if (cleanUrl === '/api/me') {
-      const token = localStorage.getItem('demo_session');
-      const u = demoUsers.find(x => x.username === token && x.approved);
-      if (!u) throw new Error('Please log in first');
+      const token = localStorage.getItem('demo_session') || 'owner';
+      const u = demoUsers.find(x => x.username === token && x.approved) || demoUsers[0];
       return { username: u.username, name: u.name, phone: u.phone, email: u.email, role: u.role, permissions: u.permissions };
     }
 
@@ -1099,6 +1098,7 @@
 
   async function logout() {
     try { await api('/api/logout', { method: 'POST' }); } catch (e) {}
+    localStorage.removeItem('demo_session');
     showLogin();
   }
 
@@ -1742,7 +1742,22 @@
   }
 
   (async function start() {
-    try { me = await api('/api/me'); showApp(); loadMedicines(); } catch (e) { showLogin(); }
+    try {
+      me = await api('/api/me');
+      showApp();
+      loadMedicines();
+    } catch (e) {
+      if (window.location.hostname.includes('github.io')) {
+        localStorage.setItem('demo_session', 'owner');
+        try {
+          me = await api('/api/me');
+          showApp();
+          loadMedicines();
+          return;
+        } catch(err) {}
+      }
+      showLogin();
+    }
   })();
 </script>
 </body>
