@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Pharmacy Management Dashboard UI</title>
 <style>
   :root {
@@ -151,7 +154,6 @@
     justify-content: space-between;
     align-items: center;
     box-shadow: var(--shadow-sm);
-    sticky: top;
   }
   .topbar-search {
     display: flex;
@@ -303,31 +305,31 @@
   }
 
   button {
-    padding: 10px 18px;
+    padding: 8px 14px;
     border: 0;
     border-radius: var(--radius-sm);
     background: linear-gradient(135deg, #10b981, #059669);
     color: #fff;
     cursor: pointer;
-    margin: 3px;
+    margin: 2px;
     font-weight: 700;
-    font-size: 13px;
-    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+    font-size: 12px;
+    box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
   button:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
     filter: brightness(1.05);
   }
   button:active { transform: translateY(0); }
-  button.warn { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 2px 6px rgba(245, 158, 11, 0.25); }
-  button.danger { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 2px 6px rgba(239, 68, 68, 0.25); }
-  button.gray { background: linear-gradient(135deg, #64748b, #475569); box-shadow: 0 2px 6px rgba(100, 116, 139, 0.2); }
-  button.accent { background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25); }
+  button.warn { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 2px 5px rgba(245, 158, 11, 0.2); }
+  button.danger { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 2px 5px rgba(239, 68, 68, 0.2); }
+  button.gray { background: linear-gradient(135deg, #64748b, #475569); box-shadow: 0 2px 5px rgba(100, 116, 139, 0.2); }
+  button.accent { background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 2px 5px rgba(37, 99, 235, 0.2); }
 
   table {
     width: 100%;
@@ -482,7 +484,7 @@
     <p class="hint" style="margin-top:0; margin-bottom:14px;">Pharmacy Management Dashboard System</p>
     <input name="username" placeholder="User ID" required autocomplete="username">
     <input name="password" type="password" placeholder="Password" required autocomplete="current-password">
-    <button type="submit">Sign In to Dashboard</button>
+    <button type="submit">🔒 Sign In to Dashboard</button>
     <div class="err" id="loginMsg"></div>
     <p class="hint" style="margin-top:16px;">New staff member? <a href="#" onclick="toggleSignup(event)">Create an account</a></p>
   </form>
@@ -494,7 +496,7 @@
     <input name="phone" placeholder="Phone Number" required>
     <input name="email" type="email" placeholder="Email Address" required>
     <input name="password" type="password" placeholder="Password (min 6 characters)" required autocomplete="new-password">
-    <button type="submit">Request Account Approval</button>
+    <button type="submit">📝 Request Account Approval</button>
     <div class="err" id="signupMsg"></div>
     <p class="hint">The owner must approve your account before you can log in.</p>
     <p class="hint">Already have an account? <a href="#" onclick="toggleSignup(event)">Back to login</a></p>
@@ -531,7 +533,7 @@
         <b id="sidebarUserName">User ID</b>
         <span id="whoami">Role</span>
       </div>
-      <button class="danger" style="padding:6px 10px; font-size:11px;" onclick="logout()">Logout</button>
+      <button class="danger" style="padding:6px 10px; font-size:11px;" onclick="logout()">🚪 Logout</button>
     </div>
   </aside>
 
@@ -629,21 +631,21 @@
           <div class="toolbar" style="background:#e0f2fe; padding:12px; border-radius:8px; border:1px solid #bae6fd;">
             <b style="color:#0369a1;">🏷️ Quick Barcode / QR Scan:</b>
             <input id="scanAddBox" placeholder="Scan barcode or type ID & press Enter" style="width:300px" onkeydown="if(event.key==='Enter'){scanAddToBill();}">
-            <button class="accent" onclick="scanAddToBill()">Add to Bill</button>
+            <button class="accent" onclick="scanAddToBill()">🛒 Add to Bill</button>
           </div>
 
           <div class="toolbar" style="margin-top:12px">
             <select id="pickMed" style="width:340px"></select>
             <input id="pickQty" type="number" min="1" value="1" style="width:90px">
-            <button onclick="addLine()">Add to bill</button>
+            <button onclick="addLine()">🛒 Add to bill</button>
           </div>
           <table>
             <thead><tr><th>Medicine</th><th>Unit Price</th><th>Qty</th><th>Line Total</th><th>Action</th></tr></thead>
             <tbody id="billRows"><tr><td colspan="5">No medicines added yet.</td></tr></tbody>
           </table>
           <div class="total">Total Amount: ₹<span id="billTotal">0.00</span></div>
-          <button onclick="saveBill()">Complete Sale &amp; Reduce Stock</button>
-          <button class="gray" onclick="clearBill()">Clear Bill</button>
+          <button onclick="saveBill()">💳 Complete Sale &amp; Print Bill</button>
+          <button class="gray" onclick="clearBill()">🗑️ Clear Bill</button>
           <div id="receipt" class="receipt" hidden></div>
         </div>
       </section>
@@ -669,8 +671,8 @@
           <div style="display:flex; gap:8px; align-items:center;">
             <input id="locateBox" placeholder="Scan barcode or type Rack, Row, ID, or Name..." style="width:420px;"
                    oninput="locate()" onkeydown="if(event.key==='Enter'){locate();}">
-            <button onclick="locate()">Search Location</button>
-            <button class="gray" onclick="document.getElementById('locateBox').value=''; locate();">Clear</button>
+            <button onclick="locate()">🔍 Search Location</button>
+            <button class="gray" onclick="document.getElementById('locateBox').value=''; locate();">🧹 Clear</button>
           </div>
           <div id="locateResult" class="locate-results"></div>
         </div>
@@ -696,8 +698,8 @@
             <div class="hint worker-note" style="margin-top:6px; color:#d97706; font-weight:bold;" hidden>
               🔒 Note: Adding or editing Barcode, Rack Number, Row, and Location requires Owner access.
             </div>
-            <button type="submit" id="saveBtn">Add Item to Inventory</button>
-            <button type="button" class="gray" onclick="resetForm()">Clear Form</button>
+            <button type="submit" id="saveBtn">➕ Add Item to Inventory</button>
+            <button type="button" class="gray" onclick="resetForm()">🧹 Clear Form</button>
           </form>
         </div>
 
@@ -768,7 +770,7 @@
               <label><input type="checkbox" id="addPermBilling" checked onchange="updateAddPermValue()"> 💳 Cashier (Billing)</label>
               <label><input type="checkbox" id="addPermInventory" checked onchange="updateAddPermValue()"> 📦 Inventory Staff</label>
             </div>
-            <button type="submit">Create Staff Account</button>
+            <button type="submit">➕ Create Staff Account</button>
           </form>
         </div>
       </section>
@@ -790,7 +792,7 @@
           </div>
           <div style="display:flex; gap:8px; justify-content:flex-end;">
             <button class="gray" onclick="closePermModal()">Cancel</button>
-            <button class="accent" onclick="savePermissions()">Save Permissions</button>
+            <button class="accent" onclick="savePermissions()">💾 Save Permissions</button>
           </div>
         </div>
       </div>
@@ -1018,7 +1020,7 @@
   }
 
   function showApp() {
-    document.getElementById('login').hidden = false;
+    document.getElementById('login').hidden = true;
     document.getElementById('app').hidden = false;
 
     const nameDisplay = me.name ? me.name : me.username;
@@ -1202,22 +1204,22 @@
     tbody.innerHTML = shown.map((m, i) =>
       '<tr>' +
       '<td><b>' + esc(m.id) + '</b></td>' +
-      '<td>' + (m.barcode ? '<span class="badge barcode-badge">' + esc(m.barcode) + '</span>' : '<span style="color:#aaa">-</span>') + '</td>' +
+      '<td>' + (m.barcode ? '<span class="badge barcode-badge">🏷️ ' + esc(m.barcode) + '</span>' : '<span style="color:#aaa">-</span>') + '</td>' +
       '<td><b>' + esc(m.name) + '</b></td>' +
-      '<td>' + (m.rack ? '<span class="badge rack-badge">' + esc(m.rack) + '</span>' : '<span style="color:#aaa">Unassigned</span>') + '</td>' +
-      '<td>' + (m.row ? '<span class="badge row-badge">' + esc(m.row) + '</span>' : '<span style="color:#aaa">-</span>') + '</td>' +
+      '<td>' + (m.rack ? '<span class="badge rack-badge">📦 ' + esc(m.rack) + '</span>' : '<span style="color:#aaa">Unassigned</span>') + '</td>' +
+      '<td>' + (m.row ? '<span class="badge row-badge">🔢 ' + esc(m.row) + '</span>' : '<span style="color:#aaa">-</span>') + '</td>' +
       '<td>' + esc(m.category) + '</td>' +
       '<td><b>' + m.quantity + '</b></td>' +
       '<td>' + m.reorderLevel + '</td>' +
       '<td>' + esc(m.expiry) + '</td>' +
       '<td>₹' + m.price.toFixed(2) + '</td>' +
       '<td><span class="badge ' + m.status + '">' + m.status + '</span></td>' +
-      '<td>' +
-        '<button class="gray" onclick="changeStock(' + i + ', 1)">Stock In</button>' +
-        '<button class="warn" onclick="changeStock(' + i + ', -1)">Stock Out</button>' +
-        '<button onclick="editItem(' + i + ')">Edit</button>' +
-        (isOwner ? '<button class="danger" onclick="deleteItem(' + i + ')">Delete</button>' : '') +
-      '</td></tr>'
+      '<td><div style="display:flex; gap:4px; flex-wrap:wrap;">' +
+        '<button class="gray" style="padding:5px 10px; font-size:12px;" onclick="changeStock(' + i + ', 1)">📥 Stock In</button>' +
+        '<button class="warn" style="padding:5px 10px; font-size:12px;" onclick="changeStock(' + i + ', -1)">📤 Stock Out</button>' +
+        '<button class="accent" style="padding:5px 10px; font-size:12px;" onclick="editItem(' + i + ')">✏️ Edit</button>' +
+        (isOwner ? '<button class="danger" style="padding:5px 10px; font-size:12px;" onclick="deleteItem(' + i + ')">🗑️ Delete</button>' : '') +
+      '</div></td></tr>'
     ).join('');
   }
 
@@ -1245,8 +1247,8 @@
       });
     f.elements.id.readOnly = true;
     editingId = m.id;
-    document.getElementById('formTitle').textContent = 'Edit medicine ' + m.id;
-    document.getElementById('saveBtn').textContent = 'Save changes';
+    document.getElementById('formTitle').textContent = '✏️ Edit Medicine ' + m.id;
+    document.getElementById('saveBtn').textContent = '💾 Save Changes';
     showTab('medicines');
     window.scrollTo({ top: 300, behavior: 'smooth' });
   }
@@ -1256,8 +1258,8 @@
     f.reset();
     f.elements.id.readOnly = false;
     editingId = null;
-    document.getElementById('formTitle').textContent = 'Add new medicine';
-    document.getElementById('saveBtn').textContent = 'Add medicine';
+    document.getElementById('formTitle').textContent = '➕ Add New Medicine / Equipment';
+    document.getElementById('saveBtn').textContent = '➕ Add Item to Inventory';
   }
 
   async function deleteItem(i) {
@@ -1325,8 +1327,8 @@
           <b>Stock:</b> ${m.quantity} units &nbsp;|&nbsp; <b>Price:</b> ₹${m.price.toFixed(2)} &nbsp;|&nbsp; <b>Expiry:</b> ${esc(m.expiry)}
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="accent" style="padding:4px 8px; font-size:12px;" onclick="quickAddBill('${esc(m.id)}')">+ Add to Bill</button>
-          <button class="gray" style="padding:4px 8px; font-size:12px;" onclick="quickStock('${esc(m.id)}', 10)">+ Stock In 10</button>
+          <button class="accent" style="padding:4px 8px; font-size:12px;" onclick="quickAddBill('${esc(m.id)}')">🛒 Add to Bill</button>
+          <button class="gray" style="padding:4px 8px; font-size:12px;" onclick="quickStock('${esc(m.id)}', 10)">📥 Stock In 10</button>
         </div>
       </div>
     `).join('');
@@ -1414,7 +1416,7 @@
         total += line;
         return '<tr><td>' + esc(l.name) + '</td><td>₹' + l.price.toFixed(2) + '</td>' +
           '<td>' + l.qty + '</td><td>₹' + line.toFixed(2) + '</td>' +
-          '<td><button class="danger" onclick="removeLine(' + i + ')">Remove</button></td></tr>';
+          '<td><button class="danger" style="padding:5px 10px; font-size:12px;" onclick="removeLine(' + i + ')">🗑️ Remove</button></td></tr>';
       }).join('');
     }
     document.getElementById('billTotal').textContent = total.toFixed(2);
@@ -1471,7 +1473,7 @@
       document.getElementById('billHistory').innerHTML = list.length
         ? list.map(b => '<tr><td>#' + b.id + '</td><td>' + esc(b.date) + '</td><td>' + esc(b.customer) +
             '</td><td><b>' + esc(b.cashier) + '</b></td><td>₹' + b.total + '</td>' +
-            '<td><button class="gray" onclick="viewBill(' + b.id + ')">View Bill</button></td></tr>').join('')
+            '<td><button class="gray" style="padding:5px 10px; font-size:12px;" onclick="viewBill(' + b.id + ')">📄 View Bill</button></td></tr>').join('')
         : '<tr><td colspan="6">No bills yet.</td></tr>';
     } catch (e) { showMsg(e.message, false); }
   }
@@ -1506,11 +1508,11 @@
             let action = '';
             if (u.username === me.username) action = '(you)';
             else {
-              if (!u.approved) action += '<button onclick="approveUser(this.dataset.u)" data-u="' + esc(u.username) + '">Approve</button>';
+              if (!u.approved) action += '<button style="padding:5px 10px; font-size:12px;" onclick="approveUser(this.dataset.u)" data-u="' + esc(u.username) + '">✅ Approve</button>';
               if (u.role !== 'OWNER') {
-                action += '<button class="accent" onclick="openPermModal(\'' + esc(u.username) + '\', \'' + esc(u.permissions || '') + '\')">Permissions</button>';
+                action += '<button class="accent" style="padding:5px 10px; font-size:12px;" onclick="openPermModal(\'' + esc(u.username) + '\', \'' + esc(u.permissions || '') + '\')">⚙️ Permissions</button>';
               }
-              action += '<button class="danger" onclick="deleteUser(this.dataset.u)" data-u="' + esc(u.username) + '">Remove</button>';
+              action += '<button class="danger" style="padding:5px 10px; font-size:12px;" onclick="deleteUser(this.dataset.u)" data-u="' + esc(u.username) + '">🗑️ Remove</button>';
             }
 
             return '<tr>' +
