@@ -1214,11 +1214,11 @@
       '<td>' + esc(m.expiry) + '</td>' +
       '<td>₹' + m.price.toFixed(2) + '</td>' +
       '<td><span class="badge ' + m.status + '">' + m.status + '</span></td>' +
-      '<td><div style="display:flex; gap:4px; flex-wrap:wrap;">' +
-        '<button class="gray" style="padding:5px 10px; font-size:12px;" onclick="changeStock(' + i + ', 1)">📥 Stock In</button>' +
-        '<button class="warn" style="padding:5px 10px; font-size:12px;" onclick="changeStock(' + i + ', -1)">📤 Stock Out</button>' +
-        '<button class="accent" style="padding:5px 10px; font-size:12px;" onclick="editItem(' + i + ')">✏️ Edit</button>' +
-        (isOwner ? '<button class="danger" style="padding:5px 10px; font-size:12px;" onclick="deleteItem(' + i + ')">🗑️ Delete</button>' : '') +
+      '<td><div style="display:flex; gap:6px; align-items:center;">' +
+        '<button class="gray" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Stock In (+)" onclick="changeStock(' + i + ', 1)">📥</button>' +
+        '<button class="warn" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Stock Out (-)" onclick="changeStock(' + i + ', -1)">📤</button>' +
+        '<button class="accent" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Edit Medicine" onclick="editItem(' + i + ')">✏️</button>' +
+        (isOwner ? '<button class="danger" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Delete Medicine" onclick="deleteItem(' + i + ')">🗑️</button>' : '') +
       '</div></td></tr>'
     ).join('');
   }
