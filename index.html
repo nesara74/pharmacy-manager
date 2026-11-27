@@ -688,7 +688,7 @@
             <button onclick="addLine()">Add to bill</button>
           </div>
           <table>
-            <thead><tr><th>Medicine</th><th>Unit Price</th><th>Qty</th><th>Line Total</th><th>Action</th></tr></thead>
+            <thead><tr><th>Medicine</th><th>Unit Price</th><th>Qty Control</th><th>Line Total</th><th>Action</th></tr></thead>
             <tbody id="billRows"><tr><td colspan="5">No medicines added yet.</td></tr></tbody>
           </table>
           <div style="font-size:24px; font-weight:800; margin:16px 0; color:#047857;">Total Amount: ₹<span id="billTotal">0.00</span></div>
@@ -1159,7 +1159,7 @@
     if (!val) return;
     const lc = val.toLowerCase();
     const m = allItems.find(x => (x.barcode && x.barcode.toLowerCase() === lc) || (x.id && x.id.toLowerCase() === lc) || (x.name && x.name.toLowerCase() === lc));
-    if (!m) { showMsg('No medicine found with barcode/ID: ' + val, false); return; }
+    if (!m) { showMsg('❌ No medicine found with barcode/ID: ' + val, false); return; }
     quickAddBill(m.id);
     document.getElementById('scanAddBox').value = '';
   }
@@ -1167,13 +1167,20 @@
   function quickAddBill(id) {
     const m = allItems.find(x => x.id === id);
     if (!m) return;
-    if (m.quantity <= 0) { showMsg('Out of stock!', false); return; }
+    if (m.quantity <= 0) {
+      showMsg('❌ Cannot add ' + m.name + '. Item is OUT OF STOCK!', false);
+      return;
+    }
     const existing = bill.find(l => l.id === id);
-    if (existing) {
-      if (existing.qty + 1 > m.quantity) { showMsg('Not enough stock left.', false); return; }
-      existing.qty++;
-    } else bill.push({ id: m.id, name: m.name, price: m.price, qty: 1 });
+    const currentInBill = existing ? existing.qty : 0;
+    if (currentInBill + 1 > m.quantity) {
+      showMsg('❌ Cannot add more ' + m.name + '. Only ' + m.quantity + ' units available in stock!', false);
+      return;
+    }
+    if (existing) existing.qty++;
+    else bill.push({ id: m.id, name: m.name, price: m.price, qty: 1 });
     showTab('billing');
+    showMsg('✅ Added 1 x ' + m.name + ' to bill.', true);
     renderBill();
   }
 
@@ -1186,10 +1193,44 @@
     const id = document.getElementById('pickMed').value;
     const qty = parseInt(document.getElementById('pickQty').value, 10);
     const m = allItems.find(x => x.id === id);
-    if (!m || !(qty > 0)) return;
+    if (!m) { showMsg('Please select a medicine first.', false); return; }
+    if (!(qty > 0)) { showMsg('Quantity must be at least 1.', false); return; }
+
+    if (m.quantity <= 0) {
+      showMsg('❌ Cannot add ' + m.name + '. Item is OUT OF STOCK!', false);
+      return;
+    }
+
     const existing = bill.find(l => l.id === id);
+    const currentInBill = existing ? existing.qty : 0;
+    const requestedTotal = currentInBill + qty;
+
+    if (requestedTotal > m.quantity) {
+      showMsg('❌ Cannot add ' + qty + ' units of ' + m.name + '. Only ' + m.quantity + ' in stock (already ' + currentInBill + ' in bill)!', false);
+      return;
+    }
+
     if (existing) existing.qty += qty;
     else bill.push({ id: m.id, name: m.name, price: m.price, qty });
+
+    showMsg('✅ Added ' + qty + ' x ' + m.name + ' to bill.', true);
+    renderBill();
+  }
+
+  function updateBillQty(index, delta) {
+    const item = bill[index];
+    if (!item) return;
+    const m = allItems.find(x => x.id === item.id);
+    const newQty = item.qty + delta;
+    if (newQty <= 0) {
+      removeLine(index);
+      return;
+    }
+    if (m && newQty > m.quantity) {
+      showMsg('❌ Cannot increase quantity of ' + item.name + '. Only ' + m.quantity + ' units available in stock!', false);
+      return;
+    }
+    item.qty = newQty;
     renderBill();
   }
 
@@ -1201,7 +1242,17 @@
       tbody.innerHTML = bill.map((l, i) => {
         const line = l.qty * l.price;
         total += line;
-        return '<tr><td>' + esc(l.name) + '</td><td>₹' + l.price.toFixed(2) + '</td><td>' + l.qty + '</td><td>₹' + line.toFixed(2) + '</td><td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="removeLine(' + i + ')">🗑️</button></td></tr>';
+        const m = allItems.find(x => x.id === l.id);
+        const maxStock = m ? m.quantity : l.qty;
+        return '<tr><td><b>' + esc(l.name) + '</b> <small style="color:#64748b;">(Max stock: ' + maxStock + ')</small></td>' +
+          '<td>₹' + l.price.toFixed(2) + '</td>' +
+          '<td><div style="display:flex; align-items:center; gap:6px;">' +
+            '<button class="gray" style="padding:2px 8px; font-size:12px;" onclick="updateBillQty(' + i + ', -1)">-</button>' +
+            '<b>' + l.qty + '</b>' +
+            '<button class="gray" style="padding:2px 8px; font-size:12px;" onclick="updateBillQty(' + i + ', 1)">+</button>' +
+          '</div></td>' +
+          '<td>₹' + line.toFixed(2) + '</td>' +
+          '<td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="removeLine(' + i + ')">🗑️</button></td></tr>';
       }).join('');
     }
     document.getElementById('billTotal').textContent = total.toFixed(2);
