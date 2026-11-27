@@ -249,6 +249,7 @@
     padding: 26px;
     border: 1px solid #e2e8f0;
     box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
   }
   .panel-header {
     display: flex;
@@ -602,6 +603,23 @@
               <div class="card-badge" style="color:#4f46e5;">▲ +2.5% This Month</div>
             </div>
           </div>
+        </div>
+
+        <!-- DEDICATED STORE AVAILABLE MEDICINES SECTION -->
+        <div class="panel" style="border: 1px solid #a7f3d0; background:#f0fdf4;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
+            <div>
+              <h3 style="margin:0; color:#064e3b; display:flex; align-items:center; gap:8px;">🏬 Currently Available Medicines In Store</h3>
+              <span style="font-size:12px; color:#047857;">Live view of all ready-to-dispense in-stock medicines &amp; rack positions</span>
+            </div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
+              <button class="gray" style="padding:5px 12px; font-size:11px;" onclick="renderStoreAvailability('ALL')">All Categories</button>
+              <button class="gray" style="padding:5px 12px; font-size:11px;" onclick="renderStoreAvailability('Pain Relief')">Pain Relief</button>
+              <button class="gray" style="padding:5px 12px; font-size:11px;" onclick="renderStoreAvailability('Antibiotic')">Antibiotic</button>
+              <button class="gray" style="padding:5px 12px; font-size:11px;" onclick="renderStoreAvailability('Cold & Flu')">Cold &amp; Flu</button>
+            </div>
+          </div>
+          <div id="storeAvailableGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:14px;"></div>
         </div>
 
         <!-- CHARTS ROW (MATCHING DRIBBBLE SCREENSHOT) -->
@@ -1019,6 +1037,7 @@
       renderDashboard();
       renderRackFilter();
       renderRows();
+      renderStoreAvailability();
       locate();
     } catch (e) { showMsg(e.message, false); }
   }
@@ -1050,6 +1069,41 @@
     document.getElementById('cardAvailableUnits').textContent = units.toLocaleString('en-IN');
     document.getElementById('cardExpiredCount').textContent = exp + ' Alerts';
     document.getElementById('cardStaffCount').textContent = (demoUsers.length || 2) + ' Active';
+    renderStoreAvailability('ALL');
+  }
+
+  // RENDER STORE AVAILABLE MEDICINES IN STORE
+  function renderStoreAvailability(categoryFilter = 'ALL') {
+    const box = document.getElementById('storeAvailableGrid');
+    if (!box) return;
+
+    let items = allItems.filter(m => m.quantity > 0);
+    if (categoryFilter !== 'ALL') {
+      items = items.filter(m => m.category.toLowerCase() === categoryFilter.toLowerCase());
+    }
+
+    if (items.length === 0) {
+      box.innerHTML = '<div style="padding:16px; color:#64748b; font-size:13px; grid-column:span 3;">No available medicines found in this category.</div>';
+      return;
+    }
+
+    box.innerHTML = items.map(m => `
+      <div style="background:#ffffff; border:1px solid #d1fae5; border-radius:14px; padding:16px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; justify-content:space-between;">
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <b style="font-size:15px; color:#0f172a;">${esc(m.name)}</b>
+            <span class="badge OK" style="font-size:10px;">In Stock (${m.quantity})</span>
+          </div>
+          <div style="font-size:12px; color:#64748b; margin-bottom:8px;">
+            🏷️ Category: <b>${esc(m.category)}</b> | 📦 Location: <b>${esc(m.rack || 'Rack N/A')}</b>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-top:1px dashed #e2e8f0; padding-top:10px;">
+          <b style="font-size:16px; color:#047857;">₹${m.price.toFixed(2)}</b>
+          <button class="accent" style="padding:4px 10px; font-size:11px;" onclick="quickAddBill('${esc(m.id)}')">🛒 Add to POS</button>
+        </div>
+      </div>
+    `).join('');
   }
 
   function renderRows() {
@@ -1111,7 +1165,7 @@
     showMsg('Inventory CSV exported successfully!', true);
   }
 
-  // ---------- LIVE AUTOCOMPLETE SEARCH IN POS BILLING ----------
+  // ---------- LIVE AUTOCOMPLETE SEARCH IN POS BILLING WITH RACK & ROW DETAILED BADGES ----------
   function onLiveSearchInput() {
     const box = document.getElementById('medSearchBox');
     const dropdown = document.getElementById('liveSearchResults');
@@ -1128,7 +1182,8 @@
       m.name.toLowerCase().includes(query) ||
       (m.barcode && m.barcode.toLowerCase().includes(query)) ||
       m.id.toLowerCase().includes(query) ||
-      (m.rack && m.rack.toLowerCase().includes(query))
+      (m.rack && m.rack.toLowerCase().includes(query)) ||
+      (m.row && m.row.toLowerCase().includes(query))
     );
 
     if (matches.length === 0) {
@@ -1140,14 +1195,17 @@
 
     dropdown.innerHTML = matches.map(m => {
       const stockBadge = m.quantity > 0
-        ? `<span class="badge OK" style="font-size:10px;">In Stock: ${m.quantity}</span>`
+        ? `<span class="badge OK" style="font-size:10px;">In Stock (${m.quantity})</span>`
         : `<span class="badge EXPIRED" style="font-size:10px;">OUT OF STOCK (0)</span>`;
       return `
         <div class="dropdown-item" onclick="selectSearchMed('${m.id}')">
           <div>
             <b>${esc(m.name)}</b> <small style="color:#64748b;">(${esc(m.id)})</small>
-            <div style="font-size:11px; color:#64748b; margin-top:2px;">
-              ${m.barcode ? `🏷️ ${esc(m.barcode)} | ` : ''} 📦 ${esc(m.rack || 'Rack N/A')} | ₹${m.price.toFixed(2)}
+            <div style="font-size:11px; color:#64748b; margin-top:4px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              ${m.barcode ? `<span class="badge barcode-badge" style="font-size:10px; padding:2px 6px;">🏷️ ${esc(m.barcode)}</span>` : ''}
+              <span class="badge rack-badge" style="font-size:10px; padding:2px 6px;">📦 ${esc(m.rack || 'Rack N/A')}</span>
+              <span class="badge row-badge" style="font-size:10px; padding:2px 6px;">🔢 ${esc(m.row || 'Row N/A')}</span>
+              <b style="color:#047857;">₹${m.price.toFixed(2)}</b>
             </div>
           </div>
           <div>${stockBadge}</div>
@@ -1389,6 +1447,23 @@
     renderBill();
   }
 
+  // CLEAN RECEIPT GENERATOR (NO RACK / ROW TEXT IN PRINTED RECEIPT)
+  function showReceipt(b) {
+    const lines = b.items.map(i =>
+      (i.name + ' x' + i.qty).padEnd(30) + ('₹' + i.lineTotal).padStart(10)).join('\n');
+    const r = document.getElementById('receipt');
+    r.textContent =
+      'PHARMACY BILL #' + b.id + '\n' +
+      'Date: ' + b.date + '\n' +
+      'Customer: ' + b.customer + '\n' +
+      'Cashier / Staff: ' + b.cashier + '\n' +
+      '----------------------------------------\n' +
+      lines + '\n' +
+      '----------------------------------------\n' +
+      'TOTAL: ₹' + b.total;
+    r.hidden = false;
+  }
+
   function renderBill() {
     const tbody = document.getElementById('billRows');
     let total = 0;
@@ -1421,6 +1496,7 @@
     const items = bill.map(l => l.id + ':' + l.qty).join(',');
     try {
       const b = await api('/api/bills', { method: 'POST', body: new URLSearchParams({ customer: document.getElementById('customer').value, items }) });
+      showReceipt(b);
       bill = [];
       renderBill();
       showMsg('Bill #' + b.id + ' saved.', true);
@@ -1434,6 +1510,14 @@
       document.getElementById('billHistory').innerHTML = list.length
         ? list.map(b => '<tr><td>#' + b.id + '</td><td>' + esc(b.date) + '</td><td>' + esc(b.customer) + '</td><td><b>' + esc(b.cashier) + '</b></td><td>₹' + b.total + '</td><td><button class="gray" style="padding:4px 8px;" onclick="viewBill(' + b.id + ')">📄 View</button></td></tr>').join('')
         : '<tr><td colspan="6">No bills yet.</td></tr>';
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  async function viewBill(id) {
+    try {
+      const b = await api('/api/bills/' + id);
+      showTab('billing');
+      showReceipt(b);
     } catch (e) { showMsg(e.message, false); }
   }
 
