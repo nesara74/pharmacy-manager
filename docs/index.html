@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Pharmacy Management Sales Dashboard</title>
+<style>
+  :root {
+    color-scheme: light;
+    --sidebar-bg: #edf8f5;
+    --sidebar-border: #d1fae5;
+    --primary: #047857;
+    --primary-dark: #064e3b;
+    --bg-main: #f3fdfa;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --text-dark: #0f172a;
+    --text-muted: #64748b;
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+    --shadow-sm: 0 2px 6px rgba(0,0,0,0.03);
+    --shadow-md: 0 8px 20px -4px rgba(0,0,0,0.06);
+  }
+
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    background: var(--bg-main);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes popScale { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+  .app-container {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* PASTEL LEFT SIDEBAR */
+  .sidebar {
+    width: 250px;
+    background: var(--sidebar-bg);
+    padding: 24px 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid var(--sidebar-border);
+    position: fixed;
+    top: 0; bottom: 0; left: 0;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 20px;
+  }
+  .sidebar-logo h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary-dark);
+  }
+
+  .nav-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 18px 12px 8px;
+  }
+
+  .sidebar-menu { display: flex; flex-direction: column; gap: 4px; }
+  .sidebar-menu .tab {
+    background: none;
+    border: 0;
+    color: #475569;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+    text-align: left;
+    width: 100%;
+  }
+  .sidebar-menu .tab:hover {
+    background: rgba(4, 120, 87, 0.08);
+    color: var(--primary-dark);
+  }
+  .sidebar-menu .tab.active {
+    background: var(--primary-dark);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(6, 78, 59, 0.25);
+  }
+
+  .sidebar-user {
+    padding: 14px;
+    background: #ffffff;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--sidebar-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* MAIN CANVAS */
+  .main-canvas {
+    margin-left: 250px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .topbar {
+    padding: 24px 36px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .topbar h2 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+  }
+
+  .filter-pill {
+    background: #ffffff;
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  main {
+    padding: 20px 36px 36px;
+    max-width: 1400px;
+    animation: fadeInUp 0.35s ease-out;
+  }
+
+  /* PASTEL KPI CARDS */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
+    margin-bottom: 28px;
+  }
+
+  .pastel-card {
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    position: relative;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 150px;
+  }
+  .pastel-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .card-menu {
+    font-size: 18px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-weight: 800;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    margin-top: 10px;
+  }
+  .card-value {
+    font-size: 26px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 4px 0;
+  }
+  .card-badge {
+    font-size: 11px;
+    font-weight: 800;
+    color: #15803d;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* PASTEL CARD COLORS */
+  .card-green { background: #dcfce7; border: 1px solid #bbf7d0; }
+  .card-cyan { background: #ccfbf1; border: 1px solid #99f6e4; }
+  .card-pink { background: #ffe4e6; border: 1px solid #fecdd3; }
+  .card-purple { background: #e0e7ff; border: 1px solid #c7d2fe; }
+
+  /* CHARTS ROW */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 22px;
+    margin-bottom: 28px;
+  }
+  @media (max-width: 950px) { .charts-grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    padding: 26px;
+    border: 1px solid #e2e8f0;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+  }
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  .panel-header h3 { margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; }
+
+  /* DONUT CHART SIMULATION */
+  .donut-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 20px 0;
+  }
+  .donut-svg { width: 200px; height: 200px; transform: rotate(-90deg); }
+  .donut-center {
+    position: absolute;
+    text-align: center;
+  }
+  .donut-center span { font-size: 12px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+  .donut-center b { display: block; font-size: 24px; font-weight: 800; color: #0f172a; }
+
+  /* BAR CHART SIMULATION WITH TOOLTIP */
+  .bar-chart-box {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    height: 180px;
+    padding-top: 30px;
+    position: relative;
+    border-bottom: 2px dashed #e2e8f0;
+  }
+  .bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+  .bar-pillar {
+    width: 32px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, #34d399 0%, #a7f3d0 100%);
+    transition: height 0.3s ease;
+  }
+  .bar-pillar.p-pink { background: linear-gradient(180deg, #f43f5e 0%, #fecdd3 100%); }
+  .bar-pillar.p-purple { background: linear-gradient(180deg, #818cf8 0%, #c7d2fe 100%); }
+  .bar-label { font-size: 11px; font-weight: 700; color: #64748b; }
+
+  .chart-tooltip {
+    position: absolute;
+    top: -10px;
+    right: 80px;
+    background: #0f172a;
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    font-size: 12px;
+  }
+  .chart-tooltip b { display: block; font-size: 18px; color: #34d399; margin-top: 2px; }
+
+  /* LIVE AUTOCOMPLETE DROPDOWN SEARCH */
+  .autocomplete-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0; right: 0;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-md);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 1000;
+    margin-top: 4px;
+  }
+  .dropdown-item {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s ease;
+  }
+  .dropdown-item:hover {
+    background: #f0fdf4;
+  }
+
+  /* TABLES & FORMS */
+  input, select {
+    padding: 10px 14px;
+    margin: 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s ease;
+    background: #fff;
+  }
+  input:focus, select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.15);
+  }
+
+  button {
+    padding: 8px 14px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, #047857, #065f46);
+    color: #fff;
+    cursor: pointer;
+    margin: 2px;
+    font-weight: 700;
+    font-size: 12px;
+    box-shadow: 0 2px 5px rgba(4, 120, 87, 0.2);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  button.warn { background: linear-gradient(135deg, #f59e0b, #d97706); }
+  button.danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  button.gray { background: linear-gradient(135deg, #64748b, #475569); }
+  button.accent { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 14px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  th, td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: middle;
+  }
+  th { background: #f8fafc; font-weight: 700; color: var(--text-muted); font-size: 12px; text-transform: uppercase; }
+  tr { transition: background 0.15s ease; }
+  tbody tr:hover { background: #f0fdf4; }
+
+  .badge {
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .OK { background: #16a34a; }
+  .LOW { background: #ea580c; }
+  .EXPIRING { background: #d97706; }
+  .OWNER { background: #7c3aed; }
+  .WORKER { background: #0284c7; }
+  .PENDING { background: #64748b; }
+  .rack-badge { background: #0284c7; color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 11px; }
+  .row-badge { background: #4f46e5; color: #fff; border-radius: 6px; padding: 4px 8px; font-size: 11px; }
+  .barcode-badge { background: #334155; color: #f8fafc; font-family: monospace; border-radius: 6px; padding: 4px 8px; font-size: 11px; }
+
+  #msg {
+    padding: 14px 20px;
+    margin: 0 0 20px;
+    border-radius: var(--radius-md);
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .good { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+  .bad { background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+  .login-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 20% 20%, #0f172a 0%, #064e3b 100%);
+    padding: 20px;
+  }
+  .login-box {
+    background: rgba(255, 255, 255, 0.96);
+    padding: 40px;
+    border-radius: var(--radius-lg);
+    width: 380px;
+    box-shadow: var(--shadow-md);
+  }
+  .login-box h2 { margin-top: 0; color: var(--text-dark); font-size: 24px; font-weight: 800; }
+  .login-box input { width: 100%; margin: 10px 0; padding: 12px 16px; border-radius: var(--radius-sm); }
+  .login-box button { width: 100%; padding: 14px; margin-top: 14px; font-size: 15px; justify-content: center; }
+
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .form-grid input { margin: 0; width: 100%; }
+
+  .locate-panel {
+    background: #dcfce7;
+    border: 1px solid #a7f3d0;
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 22px;
+  }
+
+  @media print {
+    body * { visibility: hidden; }
+    #receipt, #receipt * { visibility: visible; }
+    #receipt { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; border: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN / SIGN UP -->
+<div id="login" class="login-wrap" hidden>
+  <form id="loginForm" class="login-box">
+    <h2 style="margin-top:0">🔑 PharmaCare Login</h2>
+    <p class="hint" style="margin-top:0; margin-bottom:14px;">Pharmacy Management System</p>
+    <input name="username" placeholder="User ID" required autocomplete="username">
+    <input name="password" type="password" placeholder="Password" required autocomplete="current-password">
+    <button type="submit">🔒 Sign In to Dashboard</button>
+    <div class="err" id="loginMsg" style="color:red; margin-top:10px;"></div>
+    <p class="hint" style="margin-top:16px;">New staff member? <a href="#" onclick="toggleSignup(event)">Create account</a></p>
+  </form>
+
+  <form id="signupForm" class="login-box" hidden style="width:380px;">
+    <h2 style="margin-top:0">📝 Register Staff</h2>
+    <input name="username" placeholder="User ID (no spaces e.g. w101)" required autocomplete="username">
+    <input name="name" placeholder="Full Name (e.g. Rajesh Kumar)" required>
+    <input name="phone" placeholder="Phone Number" required>
+    <input name="email" type="email" placeholder="Email Address" required>
+    <input name="password" type="password" placeholder="Password (min 6 chars)" required autocomplete="new-password">
+    <button type="submit">📝 Request Approval</button>
+    <div class="err" id="signupMsg" style="color:red; margin-top:10px;"></div>
+    <p class="hint">Already registered? <a href="#" onclick="toggleSignup(event)">Back to login</a></p>
+  </form>
+</div>
+
+<!-- DRIBBBLE DASHBOARD APP LAYOUT -->
+<div id="app" class="app-container" hidden>
+
+  <!-- LEFT DRIBBBLE PASTEL SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <div class="sidebar-logo">
+        <span style="font-size:26px;">💊</span>
+        <h1>PharmaCare</h1>
+      </div>
+
+      <div class="nav-section-title">Main Operations</div>
+      <nav class="sidebar-menu">
+        <button class="tab active" data-tab="dashboard">📊 <span>Dashboard</span></button>
+        <button class="tab perm-inventory" data-tab="medicines">📦 <span>Products</span></button>
+        <button class="tab perm-billing" data-tab="billing">🛒 <span>Orders &amp; POS</span></button>
+      </nav>
+
+      <div class="nav-section-title">Management</div>
+      <nav class="sidebar-menu">
+        <button class="tab perm-billing" data-tab="bills">💳 <span>Payments &amp; Bills</span></button>
+        <button class="tab owner-only" data-tab="users">👥 <span>Staff &amp; Access</span></button>
+        <button class="tab owner-only" data-tab="audit">⚙️ <span>System Logs</span></button>
+      </nav>
+    </div>
+
+    <!-- SIDEBAR USER -->
+    <div class="sidebar-user">
+      <div>
+        <b id="sidebarUserName" style="font-size:13px; display:block;">User ID</b>
+        <span id="whoami" style="font-size:11px; color:#64748b;">Role</span>
+      </div>
+      <button class="danger" style="padding:6px 10px; font-size:11px;" onclick="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <!-- MAIN CANVAS -->
+  <div class="main-canvas">
+
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <div>
+        <h2 id="pageTitleText">Pharmacy Performance Dashboard</h2>
+        <span id="pageSubtext" style="font-size:13px; color:#64748b;">Live inventory tracking &amp; financial report</span>
+      </div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div id="liveClock" class="filter-pill">🕒 Loading clock...</div>
+        <div class="filter-pill">📅 This Month ▼</div>
+      </div>
+    </header>
+
+    <main>
+      <div id="msg" hidden></div>
+
+      <!-- DASHBOARD TAB -->
+      <section id="tab-dashboard">
+
+        <!-- 4 DRIBBBLE PASTEL KPI CARDS (ROLE-BASED PRIVACY & SALES METRICS) -->
+        <div class="cards" id="cards">
+          <!-- CARD 1 (LIME GREEN) -->
+          <div class="pastel-card card-green">
+            <div class="card-top">
+              <div class="card-icon">🛍️</div>
+              <div class="card-menu">•••</div>
+            </div>
+            <div>
+              <div class="card-title" id="lblCard1">Todays Sales</div>
+              <div class="card-value" id="cardTodaySales">₹0.00</div>
+              <div class="card-badge" id="subCard1">▲ +2.5% This Month</div>
+            </div>
+          </div>
+
+          <!-- CARD 2 (AQUA CYAN) -->
+          <div class="pastel-card card-cyan">
+            <div class="card-top">
+              <div class="card-icon">🔲</div>
+              <div class="card-menu">•••</div>
+            </div>
+            <div>
+              <div class="card-title" id="lblCard2">Available Inventory</div>
+              <div class="card-value" id="cardAvailableUnits">0</div>
+              <div class="card-badge" id="subCard2">▲ +2.5% This Month</div>
+            </div>
+          </div>
+
+          <!-- CARD 3 (CORAL PINK) -->
+          <div class="pastel-card card-pink">
+            <div class="card-top">
+              <div class="card-icon">📝</div>
+              <div class="card-menu">•••</div>
+            </div>
+            <div>
+              <div class="card-title" id="lblCard3">Expired / Expiring Alerts</div>
+              <div class="card-value" id="cardExpiredCount">0 Alerts</div>
+              <div class="card-badge" id="subCard3" style="color:#e11d48;">🚨 Stock Action Required</div>
+            </div>
+          </div>
+
+          <!-- CARD 4 (LAVENDER PURPLE) -->
+          <div class="pastel-card card-purple">
+            <div class="card-top">
+              <div class="card-icon">⚏</div>
+              <div class="card-menu">•••</div>
+            </div>
+            <div>
+              <div class="card-title" id="lblCard4">System Staff Accounts</div>
+              <div class="card-value" id="cardStaffCount">2 Active</div>
+              <div class="card-badge" id="subCard4" style="color:#4f46e5;">▲ Active Shift</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHARTS ROW (MATCHING DRIBBBLE SCREENSHOT) -->
+        <div class="charts-grid">
+
+          <!-- DONUT CHART (GRAPH REPORT) -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Graph Report</h3>
+              <span style="font-size:18px; color:#94a3b8; cursor:pointer;">•••</span>
+            </div>
+            <div class="donut-box">
+              <svg class="donut-svg" viewBox="0 0 42 42">
+                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#e0e7ff" stroke-width="5"></circle>
+                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#34d399" stroke-width="5" stroke-dasharray="42 58" stroke-dashoffset="0"></circle>
+                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f43f5e" stroke-width="5" stroke-dasharray="28 72" stroke-dashoffset="-42"></circle>
+                <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#3b82f6" stroke-width="5" stroke-dasharray="18 82" stroke-dashoffset="-70"></circle>
+              </svg>
+              <div class="donut-center">
+                <span>Total Stock</span>
+                <b>755K</b>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:space-around; font-size:12px; font-weight:700; margin-top:10px; color:#475569;">
+              <span><b style="color:#34d399;">●</b> Pain Relief 42%</span>
+              <span><b style="color:#f43f5e;">●</b> Antibiotics 28%</span>
+              <span><b style="color:#3b82f6;">●</b> Cold/Flu 18%</span>
+            </div>
+          </div>
+
+          <!-- BAR CHART (TOTAL SALES OVERVIEW) -->
+          <div class="panel" style="position:relative;">
+            <div class="panel-header">
+              <h3>Total Sales Overview</h3>
+            </div>
+
+            <!-- DRIBBBLE FLOATING TOOLTIP -->
+            <div class="chart-tooltip">
+              Apr, 2025
+              <b>₹298.00K</b>
+            </div>
+
+            <div class="bar-chart-box">
+              <div class="bar-col">
+                <div class="bar-pillar" style="height: 60px;"></div>
+                <span class="bar-label">Mon</span>
+              </div>
+              <div class="bar-col">
+                <div class="bar-pillar p-pink" style="height: 90px;"></div>
+                <span class="bar-label">Tue</span>
+              </div>
+              <div class="bar-col">
+                <div class="bar-pillar" style="height: 130px;"></div>
+                <span class="bar-label">Wed</span>
+              </div>
+              <div class="bar-col">
+                <div class="bar-pillar p-purple" style="height: 100px;"></div>
+                <span class="bar-label">Thu</span>
+              </div>
+              <div class="bar-col">
+                <div class="bar-pillar p-pink" style="height: 80px;"></div>
+                <span class="bar-label">Fri</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- 2D STORE FLOOR PLAN GRID -->
+        <div class="panel">
+          <h3>🗺️ Physical Store Floor Plan &amp; Rack Locations</h3>
+          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:16px; margin-top:14px;">
+            <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0;">
+              <b>📦 Rack A (Front Left)</b>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">Analgesics &amp; Antipyretics</div>
+            </div>
+            <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0;">
+              <b>📦 Rack B (Front Right)</b>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">Anti-Inflammatory &amp; Syrups</div>
+            </div>
+            <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0;">
+              <b>❄️ Cold Storage (2°C – 8°C)</b>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">Insulin &amp; Serums</div>
+            </div>
+            <div style="background:#f8fafc; padding:16px; border-radius:12px; border:1px solid #e2e8f0;">
+              <b>📦 Rack C &amp; D (Rear Right)</b>
+              <div style="font-size:12px; color:#64748b; margin-top:4px;">Surgical Supplies &amp; Vitamins</div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- BILLING TAB WITH LIVE AUTOCOMPLETE & OUT OF STOCK CONFIRMATION -->
+      <section id="tab-billing" hidden>
+        <div class="panel">
+          <h3>🛒 Point of Sale &amp; Orders</h3>
+          <div class="toolbar">
+            <input id="customer" placeholder="Customer name (optional)" style="width:280px">
+          </div>
+
+          <!-- LIVE AUTOCOMPLETE SEARCH INPUT & DROPDOWN -->
+          <div class="toolbar" style="background:#f0fdf4; padding:16px; border-radius:12px; border:1px solid #bbf7d0; gap:14px; position:relative;">
+            <div style="flex:1; position:relative;">
+              <b style="color:#047857;">🔍 Live Medicine / Barcode / Rack Search:</b>
+              <input id="medSearchBox" placeholder="Type first letter of medicine, barcode (e.g. 8901001001), or ID..."
+                     style="width:100%; padding:10px 14px; margin-top:6px;"
+                     oninput="onLiveSearchInput()" onfocus="onLiveSearchInput()" autocomplete="off">
+              <div id="liveSearchResults" class="autocomplete-dropdown" hidden></div>
+            </div>
+            <div style="width:110px;">
+              <b style="color:#047857;">Quantity:</b>
+              <input id="pickQty" type="number" min="1" value="1" style="width:100%; padding:10px 14px; margin-top:6px;">
+            </div>
+            <div style="align-self:flex-end;">
+              <button class="accent" style="padding:11px 20px;" onclick="addLineFromSearch()">🛒 Add to Bill</button>
+            </div>
+          </div>
+
+          <table>
+            <thead><tr><th>Medicine</th><th>Unit Price</th><th>Qty Control</th><th>Line Total</th><th>Action</th></tr></thead>
+            <tbody id="billRows"><tr><td colspan="5">No medicines added yet.</td></tr></tbody>
+          </table>
+          <div style="font-size:24px; font-weight:800; margin:16px 0; color:#047857;">Total Amount: ₹<span id="billTotal">0.00</span></div>
+          <button onclick="saveBill()">💳 Complete Sale &amp; Save Bill</button>
+          <button class="accent" onclick="window.print()">🖨️ Print Receipt</button>
+          <button class="gray" onclick="clearBill()">🗑️ Clear Bill</button>
+          <div id="receipt" style="font-family:monospace; white-space:pre; background:#1e293b; color:#fff; padding:16px; border-radius:12px; margin-top:14px;" hidden></div>
+        </div>
+      </section>
+
+      <!-- BILLS HISTORY TAB -->
+      <section id="tab-bills" hidden>
+        <div class="panel">
+          <h3>💳 Payment Audit Trail &amp; Invoice History</h3>
+          <table>
+            <thead><tr><th>Invoice #</th><th>Date &amp; Time</th><th>Customer</th><th>Cashier / Dispenser</th><th>Total Amount</th><th>Action</th></tr></thead>
+            <tbody id="billHistory"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- MEDICINES & RACKS TAB -->
+      <section id="tab-medicines" hidden>
+        <div class="locate-panel">
+          <h3 style="margin-top:0; color:#065f46;">🔍 Barcode &amp; Shelf Location Finder</h3>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input id="locateBox" placeholder="Scan barcode or type Rack, Row, ID, or Name..." style="width:420px;" oninput="locate()" onkeydown="if(event.key==='Enter'){locate();}">
+            <button onclick="locate()">🔍 Search Location</button>
+            <button class="gray" onclick="document.getElementById('locateBox').value=''; locate();">🧹 Clear</button>
+          </div>
+          <div id="locateResult" style="margin-top:14px; display:grid; gap:14px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));"></div>
+        </div>
+
+        <div class="panel">
+          <h3 id="formTitle" style="margin-top:0">Add New Medicine</h3>
+          <form id="medForm">
+            <div class="form-grid">
+              <input name="id" placeholder="Medicine ID (e.g. M011)" required>
+              <input name="name" placeholder="Medicine Name" required>
+              <input name="category" placeholder="Category" required>
+              <input name="supplier" placeholder="Manufacturer">
+              <input name="quantity" type="number" min="0" placeholder="Quantity" required>
+              <input name="reorderLevel" type="number" min="0" placeholder="Reorder Level" required>
+              <input name="expiry" type="date" required>
+              <input name="price" type="number" step="0.01" min="0" placeholder="Unit Price (₹)" required>
+              <input class="owner-only" name="barcode" placeholder="🏷️ Barcode (Owner only)">
+              <input class="owner-only" name="rack" placeholder="📦 Rack No. (Owner only)">
+              <input class="owner-only" name="row" placeholder="🔢 Row / Shelf (Owner only)">
+              <input class="owner-only" name="location" placeholder="📍 Location Notes (Owner only)" style="grid-column: span 2;">
+            </div>
+            <button type="submit" id="saveBtn">➕ Add Item to Inventory</button>
+            <button type="button" class="gray" onclick="resetForm()">🧹 Clear Form</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
+            <h3 style="margin:0;">Products Inventory &amp; Racks Catalogue</h3>
+            <button class="accent" onclick="exportInventoryCSV()">📥 Export Inventory CSV</button>
+          </div>
+          <div class="toolbar">
+            <input id="search" placeholder="Search barcode, rack, row, name, category, or ID" oninput="renderRows()" style="width:360px">
+            <select id="rackFilter" onchange="renderRows()"><option value="">All Racks</option></select>
+            <select id="filter" onchange="renderRows()"><option value="">All statuses</option><option value="LOW">Low stock</option><option value="EXPIRING">Expiring soon</option></select>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Barcode</th><th>Name</th><th>Rack</th><th>Row/Shelf</th><th>Category</th><th>Qty</th><th>Reorder</th><th>Expiry</th><th>Price</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- STAFF MANAGEMENT & PERMISSIONS TAB -->
+      <section id="tab-users" hidden>
+        <div class="panel">
+          <h3>👥 Staff Accounts &amp; Role Permissions Management</h3>
+          <p class="hint">Owner can assign Cashier or Inventory permissions, approve pending accounts, or remove staff.</p>
+          <table>
+            <thead><tr><th>User ID</th><th>Full Name</th><th>Phone</th><th>Email</th><th>Role</th><th>Permissions</th><th>Status</th><th>Action</th></tr></thead>
+            <tbody id="userRows"></tbody>
+          </table>
+        </div>
+
+        <!-- OWNER ADD STAFF DIRECTLY FORM (ALWAYS VISIBLE FOR OWNER) -->
+        <div class="panel owner-only">
+          <h3>➕ Add New Staff Account With Permissions</h3>
+          <form id="userForm">
+            <div class="form-grid">
+              <input name="username" placeholder="User ID (no spaces e.g. w102)" required>
+              <input name="name" placeholder="Full Name (e.g. Anish Sharma)" required>
+              <input name="phone" placeholder="Phone Number" required>
+              <input name="email" type="email" placeholder="Email Address" required>
+              <input name="password" type="password" placeholder="Password (min 6 chars)" required>
+              <select name="role">
+                <option value="WORKER">Worker</option>
+                <option value="OWNER">Owner</option>
+              </select>
+              <input name="permissions" type="hidden" id="addPermValue" value="billing,inventory">
+            </div>
+            <div style="margin:14px 0; display:flex; gap:20px; align-items:center; flex-wrap:wrap; background:#f0fdf4; padding:12px 16px; border-radius:10px; border:1px solid #bbf7d0;">
+              <b style="color:#047857;">Assign Role Permissions:</b>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="addPermBilling" checked onchange="updateAddPermValue()"> 💳 <b>Cashier Permission</b> (POS Orders &amp; Billing)
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="addPermInventory" checked onchange="updateAddPermValue()"> 📦 <b>Inventory Staff Permission</b> (Add/Edit Medicines &amp; Racks)
+              </label>
+            </div>
+            <button type="submit" class="accent" style="padding:10px 20px;">➕ Create Staff Account with Selected Permissions</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- AUDIT TAB -->
+      <section id="tab-audit" hidden>
+        <div class="panel">
+          <h3>System Audit Trail</h3>
+          <table>
+            <thead><tr><th>Date &amp; Time</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
+            <tbody id="auditRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<!-- OUT OF STOCK / STOCK LIMIT WARNING MODAL -->
+<div id="stockWarnModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;" hidden>
+  <div style="background:#fff; padding:26px; border-radius:16px; width:440px; box-shadow:0 10px 30px rgba(0,0,0,0.25); animation:popScale 0.25s ease;">
+    <h3 style="margin-top:0; color:#b91c1c; display:flex; align-items:center; gap:8px;">⚠️ Stock Quantity Warning</h3>
+    <p id="stockWarnText" style="font-size:14px; color:#334155; line-height:1.5; margin:14px 0;"></p>
+    <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+      <button class="gray" onclick="closeStockWarnModal()">❌ Cancel</button>
+      <button id="btnProceedStock" class="warn" onclick="proceedStockWarn()">✅ Proceed with Available Stock</button>
+    </div>
+  </div>
+</div>
+
+<!-- OWNER PERMISSION EDIT MODAL -->
+<div id="permModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;" hidden>
+  <div style="background:#fff; padding:26px; border-radius:16px; width:420px; box-shadow:0 10px 30px rgba(0,0,0,0.25); animation:popScale 0.25s ease;">
+    <h3 style="margin-top:0; color:#0f172a;">⚙️ Edit Staff Permissions</h3>
+    <p style="margin-bottom:14px; color:#475569;">Set access permissions for staff account <b id="permUserDisplay" style="color:#047857;"></b>:</p>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px; background:#f0fdf4; padding:16px; border-radius:10px; border:1px solid #bbf7d0;">
+      <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+        <input type="checkbox" id="chkCashier" value="billing" style="width:18px; height:18px;">
+        <span>💳 <b>Cashier Permission</b> (Process POS Sales &amp; Bills)</span>
+      </label>
+      <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+        <input type="checkbox" id="chkInventory" value="inventory" style="width:18px; height:18px;">
+        <span>📦 <b>Inventory Staff Permission</b> (Add/Edit Stock &amp; Racks)</span>
+      </label>
+    </div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;">
+      <button class="gray" onclick="closePermModal()">❌ Cancel</button>
+      <button class="accent" onclick="savePermissions()">💾 Save Permissions</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let me = null;
+  let allItems = [];
+  let shown = [];
+  let editingId = null;
+  let bill = [];
+  let selectedSearchMed = null;
+  let pendingStockWarn = null;
+  let activePermUser = null;
+
+  let isDemoMode = false;
+  let demoUsers = [
+    { username: 'owner', name: 'Pharmacy Owner', phone: '9876543210', email: 'owner@pharmacy.com', role: 'OWNER', permissions: 'billing,inventory', approved: true, password: 'owner123' },
+    { username: 'worker', name: 'Staff Worker', phone: '9123456789', email: 'worker@pharmacy.com', role: 'WORKER', permissions: 'billing,inventory', approved: true, password: 'worker123' }
+  ];
+  let demoBills = [
+    { id: 101, date: '2026-03-30 10:15:00', customer: 'Walk-in Customer', cashier: 'owner (Pharmacy Owner)', total: '150.00', items: [{ name: 'Paracetamol 500mg', qty: 2, price: 5, lineTotal: '10.00' }, { name: 'Amoxicillin 500mg', qty: 1, price: 45, lineTotal: '45.00' }] },
+    { id: 102, date: '2026-03-30 11:30:00', customer: 'Ramesh Sen', cashier: 'worker (Staff Worker)', total: '85.00', items: [{ name: 'Cough Syrup 100ml', qty: 1, price: 85, lineTotal: '85.00' }] }
+  ];
+  let demoAudit = [
+    { date: '2026-03-30 10:15:00', user: 'owner', action: 'BILL', details: '#101 total=150.00' }
+  ];
+
+  async function api(url, options = {}) {
+    try {
+      const res = await fetch(url, options);
+      let data = {};
+      try { data = await res.json(); } catch (e) {}
+      if (res.status === 401) { showLogin(); throw new Error(data.error || 'Please log in first'); }
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    } catch (err) {
+      if (err.name === 'TypeError' || err.message.includes('Failed to fetch') || window.location.hostname.includes('github.io')) {
+        isDemoMode = true;
+        return handleDemoApi(url, options);
+      }
+      throw err;
+    }
+  }
+
+  function handleDemoApi(url, options = {}) {
+    const method = (options.method || 'GET').toUpperCase();
+    const cleanUrl = url.split('?')[0];
+
+    if (cleanUrl === '/api/me') {
+      const token = localStorage.getItem('demo_session');
+      const u = demoUsers.find(x => x.username === token && x.approved);
+      if (!u) throw new Error('Please log in first');
+      return { username: u.username, name: u.name, phone: u.phone, email: u.email, role: u.role, permissions: u.permissions };
+    }
+
+    if (cleanUrl === '/api/login') {
+      const body = new URLSearchParams(options.body);
+      const name = (body.get('username') || '').trim();
+      const pass = body.get('password') || '';
+      const u = demoUsers.find(x => x.username.toLowerCase() === name.toLowerCase() && (x.password === pass || pass === 'owner123' || pass === 'worker123'));
+      if (!u) throw new Error('Wrong User ID or password. Try owner / owner123 or worker / worker123');
+      if (!u.approved) throw new Error('Your account is waiting for owner approval');
+      localStorage.setItem('demo_session', u.username);
+      return { username: u.username, name: u.name, phone: u.phone, email: u.email, role: u.role, permissions: u.permissions };
+    }
+
+    if (cleanUrl === '/api/medicines') {
+      if (method === 'POST') {
+        const body = new URLSearchParams(options.body);
+        const m = {
+          id: body.get('id'),
+          name: body.get('name'),
+          category: body.get('category'),
+          supplier: body.get('supplier'),
+          quantity: parseInt(body.get('quantity') || '0', 10),
+          reorderLevel: parseInt(body.get('reorderLevel') || '0', 10),
+          expiry: body.get('expiry'),
+          price: parseFloat(body.get('price') || '0'),
+          barcode: body.get('barcode') || '',
+          location: body.get('location') || '',
+          rack: body.get('rack') || '',
+          row: body.get('row') || '',
+          value: parseInt(body.get('quantity') || '0', 10) * parseFloat(body.get('price') || '0'),
+          status: 'OK',
+          lowStock: false,
+          expiryAlert: false
+        };
+        allItems.push(m);
+        return m;
+      }
+      if (allItems.length === 0) {
+        const today = new Date().toISOString().substring(0, 10);
+        allItems = [
+          { id: 'M001', name: 'Paracetamol 500mg', category: 'Pain Relief', supplier: 'PharmaCo', quantity: 200, reorderLevel: 50, expiry: '2027-05-20', price: 5.00, value: 1000, barcode: '8901001001', rack: 'Rack A', row: 'Row 1', location: 'Rack A, Row 1', status: 'OK', lowStock: false, expiryAlert: false },
+          { id: 'M002', name: 'Amoxicillin 500mg', category: 'Antibiotic', supplier: 'MediSupply', quantity: 80, reorderLevel: 30, expiry: '2026-10-15', price: 45.00, value: 3600, barcode: '8901001002', rack: 'Rack A', row: 'Row 2', location: 'Rack A, Row 2', status: 'OK', lowStock: false, expiryAlert: false },
+          { id: 'M003', name: 'Ibuprofen 400mg', category: 'Pain Relief', supplier: 'PharmaCo', quantity: 25, reorderLevel: 40, expiry: '2026-12-01', price: 12.00, value: 300, barcode: '8901001003', rack: 'Rack B', row: 'Row 1', location: 'Rack B, Row 1', status: 'LOW', lowStock: true, expiryAlert: false },
+          { id: 'M004', name: 'Insulin Glargine', category: 'Diabetes', supplier: 'BioLife', quantity: 15, reorderLevel: 10, expiry: today, price: 450.00, value: 6750, barcode: '8901001004', rack: 'Fridge 1', row: 'Shelf 1', location: 'Fridge 1, Shelf 1', status: 'EXPIRING', lowStock: false, expiryAlert: true },
+          { id: 'M005', name: 'Cough Syrup 100ml', category: 'Cold & Flu', supplier: 'HealthPlus', quantity: 40, reorderLevel: 15, expiry: '2027-08-30', price: 85.00, value: 3400, barcode: '8901001005', rack: 'Rack B', row: 'Row 3', location: 'Rack B, Row 3', status: 'OK', lowStock: false, expiryAlert: false }
+        ];
+      }
+      return allItems;
+    }
+
+    if (cleanUrl === '/api/users') {
+      if (method === 'POST') {
+        const body = new URLSearchParams(options.body);
+        demoUsers.push({
+          username: body.get('username'),
+          name: body.get('name'),
+          phone: body.get('phone'),
+          email: body.get('email'),
+          role: body.get('role') || 'WORKER',
+          permissions: body.get('permissions') || 'billing,inventory',
+          approved: true,
+          password: body.get('password')
+        });
+        return { ok: true };
+      }
+      return demoUsers;
+    }
+
+    if (cleanUrl.includes('/approve')) {
+      const parts = cleanUrl.split('/');
+      const targetUser = parts[3];
+      const u = demoUsers.find(x => x.username === targetUser);
+      if (u) u.approved = true;
+      return { ok: true };
+    }
+
+    if (cleanUrl.includes('/permissions')) {
+      const parts = cleanUrl.split('/');
+      const targetUser = parts[3];
+      const body = new URLSearchParams(options.body);
+      const u = demoUsers.find(x => x.username === targetUser);
+      if (u) u.permissions = body.get('permissions') || '';
+      return { ok: true };
+    }
+
+    if (cleanUrl === '/api/bills') return demoBills;
+    if (cleanUrl === '/api/audit') return demoAudit;
+    return { ok: true };
+  }
+
+  function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+  function showMsg(text, ok) {
+    const m = document.getElementById('msg');
+    m.textContent = text;
+    m.className = ok ? 'good' : 'bad';
+    m.hidden = false;
+    setTimeout(() => m.hidden = true, 4000);
+  }
+
+  function showLogin() {
+    me = null;
+    document.getElementById('login').hidden = false;
+    document.getElementById('app').hidden = true;
+  }
+
+  function hasPerm(p) {
+    if (!me) return false;
+    if (me.role === 'OWNER') return true;
+    return me.permissions && me.permissions.split(',').map(x => x.trim()).includes(p);
+  }
+
+  function showApp() {
+    document.getElementById('login').hidden = true;
+    document.getElementById('app').hidden = false;
+
+    const nameDisplay = me.name ? me.name : me.username;
+    document.getElementById('sidebarUserName').textContent = nameDisplay;
+    document.getElementById('whoami').textContent = me.role;
+
+    document.querySelectorAll('.owner-only').forEach(el => el.hidden = me.role !== 'OWNER');
+    const canBilling = hasPerm('billing');
+    const canInventory = hasPerm('inventory');
+    document.querySelectorAll('.perm-billing').forEach(el => el.hidden = !canBilling);
+    document.querySelectorAll('.perm-inventory').forEach(el => el.hidden = !canInventory);
+
+    showTab('dashboard');
+  }
+
+  const TABS = ['dashboard', 'billing', 'bills', 'medicines', 'users', 'audit'];
+
+  function showTab(name) {
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+    TABS.forEach(t => document.getElementById('tab-' + t).hidden = t !== name);
+    if (name === 'bills') loadBills();
+    if (name === 'users') loadUsers();
+    if (name === 'audit') loadAudit();
+  }
+
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => showTab(b.dataset.tab)));
+
+  function toggleSignup(e) {
+    e.preventDefault();
+    document.getElementById('loginForm').hidden = !document.getElementById('loginForm').hidden;
+    document.getElementById('signupForm').hidden = !document.getElementById('signupForm').hidden;
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      me = await api('/api/login', { method: 'POST', body: new URLSearchParams(new FormData(e.target)) });
+      e.target.reset();
+      showApp();
+      loadMedicines();
+    } catch (err) {
+      document.getElementById('loginMsg').textContent = err.message;
+    }
+  });
+
+  async function logout() {
+    try { await api('/api/logout', { method: 'POST' }); } catch (e) {}
+    showLogin();
+  }
+
+  async function loadMedicines() {
+    try {
+      allItems = await api('/api/medicines');
+      renderDashboard();
+      renderRackFilter();
+      renderRows();
+      locate();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  function renderRackFilter() {
+    const sel = document.getElementById('rackFilter');
+    const curr = sel.value;
+    const racks = Array.from(new Set(allItems.map(m => m.rack).filter(Boolean))).sort();
+    sel.innerHTML = '<option value="">All Racks</option>' +
+      racks.map(r => '<option value="' + esc(r) + '">' + esc(r) + '</option>').join('');
+    sel.value = curr;
+  }
+
+  function updateLiveClock() {
+    const el = document.getElementById('liveClock');
+    if (!el) return;
+    const now = new Date();
+    el.textContent = '🕒 ' + now.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+  setInterval(updateLiveClock, 1000);
+
+  // ROLE-BASED FINANCIAL PRIVACY DASHBOARD
+  async function renderDashboard() {
+    updateLiveClock();
+
+    const isOwner = me && me.role === 'OWNER';
+    let billsList = [];
+    try {
+      billsList = await api('/api/bills');
+    } catch(e) {
+      billsList = demoBills;
+    }
+
+    if (isOwner) {
+      // OWNER VIEW: TOTAL STORE FINANCIALS & VALUATION
+      const totalInventoryValuation = allItems.reduce((s, m) => s + m.value, 0);
+      const totalStoreUnits = allItems.reduce((s, m) => s + m.quantity, 0);
+      const totalStoreSalesToday = billsList.reduce((s, b) => s + parseFloat(b.total || '0'), 0);
+      const expiredCount = allItems.filter(m => m.expiryAlert).length;
+
+      document.getElementById('pageTitleText').textContent = 'Store Owner Financial Dashboard';
+      document.getElementById('pageSubtext').textContent = 'Full store sales, valuation, & inventory analytics';
+
+      document.getElementById('lblCard1').textContent = "Total Store Sales Today";
+      document.getElementById('cardTodaySales').textContent = '₹' + totalStoreSalesToday.toFixed(2);
+      document.getElementById('subCard1').textContent = '▲ Total Store Revenue';
+
+      document.getElementById('lblCard2').textContent = "Total Stock Valuation";
+      document.getElementById('cardAvailableUnits').textContent = '₹' + totalInventoryValuation.toFixed(2);
+      document.getElementById('subCard2').textContent = `📦 ${totalStoreUnits} Total Units`;
+
+      document.getElementById('lblCard3').textContent = "Expired / Stock Alerts";
+      document.getElementById('cardExpiredCount').textContent = expiredCount + ' Alerts';
+      document.getElementById('subCard3').textContent = '🚨 Stock Action Required';
+
+      document.getElementById('lblCard4').textContent = "Active Staff Accounts";
+      document.getElementById('cardStaffCount').textContent = (demoUsers.length || 2) + ' Active';
+      document.getElementById('subCard4').textContent = '👑 Owner Full Privileges';
+
+    } else {
+      // WORKER VIEW: PERSONAL SALES & COMPLETED BILLS MONEY
+      const myUsername = me ? me.username.toLowerCase() : '';
+      const myName = me ? (me.name || '').toLowerCase() : '';
+
+      const myBills = billsList.filter(b => {
+        const cashier = (b.cashier || '').toLowerCase();
+        return cashier.includes(myUsername) || (myName && cashier.includes(myName));
+      });
+
+      const myTotalMoneyToday = myBills.reduce((s, b) => s + parseFloat(b.total || '0'), 0);
+      const myCompletedBillsCount = myBills.length;
+      let myTotalItemsSold = 0;
+      myBills.forEach(b => {
+        if (b.items) {
+          b.items.forEach(it => myTotalItemsSold += (parseInt(it.qty || '1', 10)));
+        }
+      });
+
+      document.getElementById('pageTitleText').textContent = 'My Worker Performance Dashboard';
+      document.getElementById('pageSubtext').textContent = 'Your personal sales, completed orders, & shift stats';
+
+      document.getElementById('lblCard1').textContent = "My Sales Today (Money)";
+      document.getElementById('cardTodaySales').textContent = '₹' + myTotalMoneyToday.toFixed(2);
+      document.getElementById('subCard1').textContent = '💰 Total Billed By Me Today';
+
+      document.getElementById('lblCard2').textContent = "My Completed Bills";
+      document.getElementById('cardAvailableUnits').textContent = myCompletedBillsCount + ' Bills';
+      document.getElementById('subCard2').textContent = '🧾 Total Invoices Billed';
+
+      document.getElementById('lblCard3').textContent = "My Total Sold Items";
+      document.getElementById('cardExpiredCount').textContent = myTotalItemsSold + ' Units';
+      document.getElementById('subCard3').textContent = '📦 Units Sold Today';
+
+      document.getElementById('lblCard4').textContent = "Shift Account Status";
+      document.getElementById('cardStaffCount').textContent = 'Active Staff';
+      document.getElementById('subCard4').textContent = '👷 Worker Cashier Access';
+    }
+  }
+
+  function renderRows() {
+    const k = document.getElementById('search').value.trim().toLowerCase();
+    const selectedRack = document.getElementById('rackFilter').value;
+    const f = document.getElementById('filter').value;
+
+    shown = allItems.filter(m => {
+      const textMatch = !k || [m.id, m.barcode, m.name, m.category, m.supplier, m.location, m.rack, m.row].join(' ').toLowerCase().includes(k);
+      const rackMatch = !selectedRack || m.rack === selectedRack;
+      const statusMatch = (f === 'LOW' ? m.lowStock : f === 'EXPIRING' ? m.expiryAlert : true);
+      return textMatch && rackMatch && statusMatch;
+    });
+
+    const isOwner = me && me.role === 'OWNER';
+    const tbody = document.getElementById('rows');
+    if (shown.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="12">No medicines found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = shown.map((m, i) =>
+      '<tr>' +
+      '<td><b>' + esc(m.id) + '</b></td>' +
+      '<td>' + (m.barcode ? '<span class="badge barcode-badge">🏷️ ' + esc(m.barcode) + '</span>' : '<span style="color:#aaa">-</span>') + '</td>' +
+      '<td><b>' + esc(m.name) + '</b></td>' +
+      '<td>' + (m.rack ? '<span class="badge rack-badge">📦 ' + esc(m.rack) + '</span>' : '<span style="color:#aaa">Unassigned</span>') + '</td>' +
+      '<td>' + (m.row ? '<span class="badge row-badge">🔢 ' + esc(m.row) + '</span>' : '<span style="color:#aaa">-</span>') + '</td>' +
+      '<td>' + esc(m.category) + '</td>' +
+      '<td><b>' + m.quantity + '</b></td>' +
+      '<td>' + m.reorderLevel + '</td>' +
+      '<td>' + esc(m.expiry) + '</td>' +
+      '<td>₹' + m.price.toFixed(2) + '</td>' +
+      '<td><span class="badge ' + m.status + '">' + m.status + '</span></td>' +
+      '<td><div style="display:flex; gap:6px; align-items:center;">' +
+        '<button class="gray" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Stock In (+)" onclick="changeStock(' + i + ', 1)">📥</button>' +
+        '<button class="warn" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Stock Out (-)" onclick="changeStock(' + i + ', -1)">📤</button>' +
+        '<button class="accent" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Edit Medicine" onclick="editItem(' + i + ')">✏️</button>' +
+        (isOwner ? '<button class="danger" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Delete Medicine" onclick="deleteItem(' + i + ')">🗑️</button>' : '') +
+      '</div></td></tr>'
+    ).join('');
+  }
+
+  function exportInventoryCSV() {
+    if (allItems.length === 0) { showMsg('No inventory items to export.', false); return; }
+    const headers = ['ID', 'Barcode', 'Name', 'Rack', 'Row', 'Category', 'Quantity', 'ReorderLevel', 'Expiry', 'Price', 'Value'];
+    const csvRows = [headers.join(',')];
+    allItems.forEach(m => {
+      csvRows.push([
+        `"${m.id}"`, `"${m.barcode || ''}"`, `"${m.name}"`, `"${m.rack || ''}"`, `"${m.row || ''}"`, `"${m.category}"`,
+        m.quantity, m.reorderLevel, `"${m.expiry}"`, m.price, m.value
+      ].join(','));
+    });
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Pharmacy_Inventory_${new Date().toISOString().substring(0, 10)}.csv`;
+    link.click();
+    showMsg('Inventory CSV exported successfully!', true);
+  }
+
+  // ---------- LIVE AUTOCOMPLETE SEARCH IN POS BILLING WITH RACK & ROW DETAILED BADGES ----------
+  function onLiveSearchInput() {
+    const box = document.getElementById('medSearchBox');
+    const dropdown = document.getElementById('liveSearchResults');
+    const query = box.value.trim().toLowerCase();
+
+    if (!query) {
+      dropdown.hidden = true;
+      dropdown.innerHTML = '';
+      selectedSearchMed = null;
+      return;
+    }
+
+    const matches = allItems.filter(m =>
+      m.name.toLowerCase().includes(query) ||
+      (m.barcode && m.barcode.toLowerCase().includes(query)) ||
+      m.id.toLowerCase().includes(query) ||
+      (m.rack && m.rack.toLowerCase().includes(query)) ||
+      (m.row && m.row.toLowerCase().includes(query))
+    );
+
+    if (matches.length === 0) {
+      dropdown.innerHTML = '<div style="padding:12px 16px; color:#94a3b8; font-size:13px;">❌ No matching medicines or barcodes found.</div>';
+      dropdown.hidden = false;
+      selectedSearchMed = null;
+      return;
+    }
+
+    dropdown.innerHTML = matches.map(m => {
+      const stockBadge = m.quantity > 0
+        ? `<span class="badge OK" style="font-size:10px;">In Stock (${m.quantity})</span>`
+        : `<span class="badge EXPIRED" style="font-size:10px;">OUT OF STOCK (0)</span>`;
+      return `
+        <div class="dropdown-item" onclick="selectSearchMed('${m.id}')">
+          <div>
+            <b>${esc(m.name)}</b> <small style="color:#64748b;">(${esc(m.id)})</small>
+            <div style="font-size:11px; color:#64748b; margin-top:4px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+              ${m.barcode ? `<span class="badge barcode-badge" style="font-size:10px; padding:2px 6px;">🏷️ ${esc(m.barcode)}</span>` : ''}
+              <span class="badge rack-badge" style="font-size:10px; padding:2px 6px;">📦 ${esc(m.rack || 'Rack N/A')}</span>
+              <span class="badge row-badge" style="font-size:10px; padding:2px 6px;">🔢 ${esc(m.row || 'Row N/A')}</span>
+              <b style="color:#047857;">₹${m.price.toFixed(2)}</b>
+            </div>
+          </div>
+          <div>${stockBadge}</div>
+        </div>
+      `;
+    }).join('');
+
+    dropdown.hidden = false;
+  }
+
+  function selectSearchMed(id) {
+    const m = allItems.find(x => x.id === id);
+    if (!m) return;
+    selectedSearchMed = m;
+    document.getElementById('medSearchBox').value = `${m.name} [₹${m.price.toFixed(2)}]`;
+    document.getElementById('liveSearchResults').hidden = true;
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('liveSearchResults');
+    const box = document.getElementById('medSearchBox');
+    if (dropdown && box && !box.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.hidden = true;
+    }
+  });
+
+  function addLineFromSearch() {
+    const qty = parseInt(document.getElementById('pickQty').value, 10);
+    const boxVal = document.getElementById('medSearchBox').value.trim();
+
+    let m = selectedSearchMed;
+    if (!m && boxVal) {
+      const query = boxVal.toLowerCase();
+      m = allItems.find(x => x.name.toLowerCase() === query || (x.barcode && x.barcode.toLowerCase() === query) || x.id.toLowerCase() === query);
+    }
+
+    if (!m) {
+      showMsg('Please search and select a medicine from the list first.', false);
+      return;
+    }
+
+    if (!(qty > 0)) {
+      showMsg('Quantity must be at least 1.', false);
+      return;
+    }
+
+    const existing = bill.find(l => l.id === m.id);
+    const currentInBill = existing ? existing.qty : 0;
+    const requestedTotal = currentInBill + qty;
+
+    // OUT OF STOCK OR EXCEEDS STOCK WARNING MODAL
+    if (m.quantity <= 0 || requestedTotal > m.quantity) {
+      openStockWarnModal(m, qty, currentInBill);
+      return;
+    }
+
+    if (existing) existing.qty += qty;
+    else bill.push({ id: m.id, name: m.name, price: m.price, qty });
+
+    showMsg(`✅ Added ${qty} x ${m.name} to bill.`, true);
+    document.getElementById('medSearchBox').value = '';
+    selectedSearchMed = null;
+    renderBill();
+  }
+
+  // OUT OF STOCK / OVER-STOCK CONFIRMATION MODAL
+  function openStockWarnModal(m, requestedQty, currentInBill) {
+    pendingStockWarn = { m, requestedQty, currentInBill };
+    const textEl = document.getElementById('stockWarnText');
+    const btnProceed = document.getElementById('btnProceedStock');
+
+    if (m.quantity <= 0) {
+      textEl.innerHTML = `
+        <b>Item "${esc(m.name)}" is OUT OF STOCK (0 units left).</b><br><br>
+        You requested <b>${requestedQty} units</b>, but there is no stock in the inventory.
+      `;
+      btnProceed.style.display = 'none';
+    } else {
+      textEl.innerHTML = `
+        <b>Requested quantity exceeds current available stock!</b><br><br>
+        Item: <b>${esc(m.name)}</b><br>
+        Available Stock: <b style="color:#047857;">${m.quantity} units</b><br>
+        Already in Bill: <b>${currentInBill} units</b><br>
+        Requested Add: <b>${requestedQty} units</b><br><br>
+        Would you like to proceed by adding the maximum available stock (<b>${m.quantity - currentInBill} units</b>) to the bill?
+      `;
+      btnProceed.style.display = 'inline-flex';
+    }
+
+    document.getElementById('stockWarnModal').hidden = false;
+  }
+
+  function closeStockWarnModal() {
+    pendingStockWarn = null;
+    document.getElementById('stockWarnModal').hidden = true;
+  }
+
+  function proceedStockWarn() {
+    if (!pendingStockWarn) return;
+    const { m, currentInBill } = pendingStockWarn;
+    const maxCanAdd = m.quantity - currentInBill;
+
+    if (maxCanAdd > 0) {
+      const existing = bill.find(l => l.id === m.id);
+      if (existing) existing.qty += maxCanAdd;
+      else bill.push({ id: m.id, name: m.name, price: m.price, qty: maxCanAdd });
+      showMsg(`✅ Added maximum available stock (${maxCanAdd} x ${m.name}) to bill.`, true);
+      renderBill();
+    }
+
+    closeStockWarnModal();
+    document.getElementById('medSearchBox').value = '';
+    selectedSearchMed = null;
+  }
+
+  async function changeStock(i, sign) {
+    const m = shown[i];
+    const text = prompt((sign > 0 ? 'Stock IN' : 'Stock OUT') + ' amount for ' + m.name + ':');
+    if (text === null) return;
+    const amount = parseInt(text, 10);
+    if (!(amount > 0)) { showMsg('Please enter a positive whole number.', false); return; }
+    try {
+      await api('/api/medicines/' + encodeURIComponent(m.id) + '/stock', { method: 'POST', body: new URLSearchParams({ change: sign * amount }) });
+      showMsg('Stock updated.', true);
+      loadMedicines();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  function editItem(i) {
+    const m = shown[i];
+    const f = document.getElementById('medForm');
+    ['id', 'name', 'category', 'supplier', 'quantity', 'reorderLevel', 'expiry', 'price', 'barcode', 'location', 'rack', 'row'].forEach(k => {
+      if (f.elements[k]) f.elements[k].value = m[k] || '';
+    });
+    f.elements.id.readOnly = true;
+    editingId = m.id;
+    document.getElementById('formTitle').textContent = '✏️ Edit Medicine ' + m.id;
+    document.getElementById('saveBtn').textContent = '💾 Save Changes';
+    showTab('medicines');
+    window.scrollTo({ top: 300, behavior: 'smooth' });
+  }
+
+  function resetForm() {
+    const f = document.getElementById('medForm');
+    f.reset();
+    f.elements.id.readOnly = false;
+    editingId = null;
+    document.getElementById('formTitle').textContent = '➕ Add New Medicine';
+    document.getElementById('saveBtn').textContent = '➕ Add Item to Inventory';
+  }
+
+  async function deleteItem(i) {
+    const m = shown[i];
+    if (!confirm('Delete ' + m.name + ' (' + m.id + ')?')) return;
+    try {
+      await api('/api/medicines/' + encodeURIComponent(m.id), { method: 'DELETE' });
+      showMsg('Medicine deleted.', true);
+      loadMedicines();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  document.getElementById('medForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = new URLSearchParams(new FormData(e.target));
+    try {
+      if (editingId) {
+        await api('/api/medicines/' + encodeURIComponent(editingId), { method: 'PUT', body });
+        showMsg('Medicine updated.', true);
+      } else {
+        await api('/api/medicines', { method: 'POST', body });
+        showMsg('Medicine added.', true);
+      }
+      resetForm();
+      loadMedicines();
+    } catch (err) { showMsg(err.message, false); }
+  });
+
+  function locate() {
+    const code = document.getElementById('locateBox').value.trim();
+    const out = document.getElementById('locateResult');
+    if (!code) { out.innerHTML = ''; return; }
+    const lc = code.toLowerCase();
+    const matches = allItems.filter(x =>
+      (x.barcode && x.barcode.toLowerCase() === lc) ||
+      (x.id && x.id.toLowerCase() === lc) ||
+      (x.rack && x.rack.toLowerCase().includes(lc)) ||
+      (x.row && x.row.toLowerCase().includes(lc)) ||
+      (x.name && x.name.toLowerCase().includes(lc))
+    );
+    if (matches.length === 0) {
+      out.innerHTML = '<div style="color:#b91c1c; font-weight:bold; padding:10px;">❌ No medicine or rack found matching "' + esc(code) + '"</div>';
+      return;
+    }
+    out.innerHTML = matches.map(m => `
+      <div style="background:#fff; border:1px solid #6ee7b7; border-radius:12px; padding:16px;">
+        <h4 style="margin:0 0 8px; font-size:16px; color:#065f46;">${esc(m.name)} <small>(${esc(m.id)})</small></h4>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+          <span class="badge rack-badge">📦 ${esc(m.rack || 'Rack not set')}</span>
+          <span class="badge row-badge">🔢 ${esc(m.row || 'Row not set')}</span>
+        </div>
+        <div style="font-size:13px;">Stock: <b>${m.quantity} units</b> | Price: <b>₹${m.price.toFixed(2)}</b></div>
+      </div>
+    `).join('');
+  }
+
+  function quickAddBill(id) {
+    const m = allItems.find(x => x.id === id);
+    if (!m) return;
+    const existing = bill.find(l => l.id === id);
+    const currentInBill = existing ? existing.qty : 0;
+
+    if (m.quantity <= 0 || currentInBill + 1 > m.quantity) {
+      openStockWarnModal(m, 1, currentInBill);
+      return;
+    }
+
+    if (existing) existing.qty++;
+    else bill.push({ id: m.id, name: m.name, price: m.price, qty: 1 });
+    showTab('billing');
+    showMsg('✅ Added 1 x ' + m.name + ' to bill.', true);
+    renderBill();
+  }
+
+  function updateBillQty(index, delta) {
+    const item = bill[index];
+    if (!item) return;
+    const m = allItems.find(x => x.id === item.id);
+    const newQty = item.qty + delta;
+    if (newQty <= 0) {
+      removeLine(index);
+      return;
+    }
+    if (m && newQty > m.quantity) {
+      openStockWarnModal(m, 1, item.qty);
+      return;
+    }
+    item.qty = newQty;
+    renderBill();
+  }
+
+  // CLEAN RECEIPT GENERATOR (NO RACK / ROW TEXT IN PRINTED RECEIPT)
+  function showReceipt(b) {
+    const lines = b.items.map(i =>
+      (i.name + ' x' + i.qty).padEnd(30) + ('₹' + i.lineTotal).padStart(10)).join('\n');
+    const r = document.getElementById('receipt');
+    r.textContent =
+      'PHARMACY BILL #' + b.id + '\n' +
+      'Date: ' + b.date + '\n' +
+      'Customer: ' + b.customer + '\n' +
+      'Cashier / Staff: ' + b.cashier + '\n' +
+      '----------------------------------------\n' +
+      lines + '\n' +
+      '----------------------------------------\n' +
+      'TOTAL: ₹' + b.total;
+    r.hidden = false;
+  }
+
+  function renderBill() {
+    const tbody = document.getElementById('billRows');
+    let total = 0;
+    if (bill.length === 0) tbody.innerHTML = '<tr><td colspan="5">No medicines added yet.</td></tr>';
+    else {
+      tbody.innerHTML = bill.map((l, i) => {
+        const line = l.qty * l.price;
+        total += line;
+        const m = allItems.find(x => x.id === l.id);
+        const maxStock = m ? m.quantity : l.qty;
+        return '<tr><td><b>' + esc(l.name) + '</b> <small style="color:#64748b;">(Max stock: ' + maxStock + ')</small></td>' +
+          '<td>₹' + l.price.toFixed(2) + '</td>' +
+          '<td><div style="display:flex; align-items:center; gap:6px;">' +
+            '<button class="gray" style="padding:2px 8px; font-size:12px;" onclick="updateBillQty(' + i + ', -1)">-</button>' +
+            '<b>' + l.qty + '</b>' +
+            '<button class="gray" style="padding:2px 8px; font-size:12px;" onclick="updateBillQty(' + i + ', 1)">+</button>' +
+          '</div></td>' +
+          '<td>₹' + line.toFixed(2) + '</td>' +
+          '<td><button class="danger" style="padding:4px 8px; font-size:12px;" onclick="removeLine(' + i + ')">🗑️</button></td></tr>';
+      }).join('');
+    }
+    document.getElementById('billTotal').textContent = total.toFixed(2);
+  }
+
+  function removeLine(i) { bill.splice(i, 1); renderBill(); }
+  function clearBill() { bill = []; renderBill(); }
+
+  async function saveBill() {
+    if (bill.length === 0) return;
+    const items = bill.map(l => l.id + ':' + l.qty).join(',');
+    try {
+      const b = await api('/api/bills', { method: 'POST', body: new URLSearchParams({ customer: document.getElementById('customer').value, items }) });
+      showReceipt(b);
+      bill = [];
+      renderBill();
+      showMsg('Bill #' + b.id + ' saved.', true);
+      loadMedicines();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  async function loadBills() {
+    try {
+      const list = await api('/api/bills');
+      document.getElementById('billHistory').innerHTML = list.length
+        ? list.map(b => '<tr><td>#' + b.id + '</td><td>' + esc(b.date) + '</td><td>' + esc(b.customer) + '</td><td><b>' + esc(b.cashier) + '</b></td><td>₹' + b.total + '</td><td><button class="gray" style="padding:4px 8px;" onclick="viewBill(' + b.id + ')">📄 View</button></td></tr>').join('')
+        : '<tr><td colspan="6">No bills yet.</td></tr>';
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  async function viewBill(id) {
+    try {
+      const b = await api('/api/bills/' + id);
+      showTab('billing');
+      showReceipt(b);
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  // ---------- STAFF & APPROVALS (owner) ----------
+  let activePermUser = null;
+
+  async function loadUsers() {
+    try {
+      const list = await api('/api/users');
+      document.getElementById('userRows').innerHTML = list.length
+        ? list.map(u => {
+            const status = u.approved ? '<span class="badge OK">APPROVED</span>' : '<span class="badge PENDING">PENDING</span>';
+            const perms = (u.permissions || '').split(',').map(x => x.trim());
+            let permBadges = '';
+            if (u.role === 'OWNER') {
+              permBadges = '<span class="badge OWNER">👑 Full System Owner</span>';
+            } else {
+              if (perms.includes('billing')) permBadges += '<span class="badge" style="background:#2563eb; margin-right:4px;">💳 Cashier</span>';
+              if (perms.includes('inventory')) permBadges += '<span class="badge" style="background:#059669;">📦 Inventory Staff</span>';
+              if (!permBadges) permBadges = '<span class="badge" style="background:#6b7280;">No Access</span>';
+            }
+
+            let action = '';
+            if (u.username === me.username) action = '(you)';
+            else {
+              if (!u.approved) action += '<button style="padding:5px 10px; font-size:12px;" onclick="approveUser(this.dataset.u)" data-u="' + esc(u.username) + '">✅ Approve</button>';
+              if (u.role !== 'OWNER') {
+                action += '<button class="accent" style="padding:5px 10px; font-size:12px;" onclick="openPermModal(\'' + esc(u.username) + '\', \'' + esc(u.permissions || '') + '\')">⚙️ Permissions</button>';
+              }
+              action += '<button class="danger" style="padding:5px 10px; font-size:12px;" onclick="deleteUser(this.dataset.u)" data-u="' + esc(u.username) + '">🗑️ Remove</button>';
+            }
+
+            return '<tr>' +
+              '<td><b>' + esc(u.username) + '</b></td>' +
+              '<td>' + esc(u.name || '-') + '</td>' +
+              '<td>' + esc(u.phone || '-') + '</td>' +
+              '<td>' + esc(u.email || '-') + '</td>' +
+              '<td><span class="badge ' + u.role + '">' + u.role + '</span></td>' +
+              '<td>' + permBadges + '</td>' +
+              '<td>' + status + '</td>' +
+              '<td>' + action + '</td></tr>';
+          }).join('')
+        : '<tr><td colspan="8">No staff accounts.</td></tr>';
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  function openPermModal(username, perms) {
+    activePermUser = username;
+    document.getElementById('permUserDisplay').textContent = username;
+    const list = (perms || '').split(',').map(x => x.trim());
+    document.getElementById('chkCashier').checked = list.includes('billing');
+    document.getElementById('chkInventory').checked = list.includes('inventory');
+    document.getElementById('permModal').hidden = false;
+  }
+
+  function closePermModal() {
+    activePermUser = null;
+    document.getElementById('permModal').hidden = true;
+  }
+
+  async function savePermissions() {
+    if (!activePermUser) return;
+    const selected = [];
+    if (document.getElementById('chkCashier').checked) selected.push('billing');
+    if (document.getElementById('chkInventory').checked) selected.push('inventory');
+    const permissions = selected.join(',');
+
+    try {
+      await api('/api/users/' + encodeURIComponent(activePermUser) + '/permissions', {
+        method: 'POST',
+        body: new URLSearchParams({ permissions })
+      });
+      showMsg('Permissions updated for ' + activePermUser, true);
+      closePermModal();
+      loadUsers();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  function updateAddPermValue() {
+    const p = [];
+    if (document.getElementById('addPermBilling').checked) p.push('billing');
+    if (document.getElementById('addPermInventory').checked) p.push('inventory');
+    document.getElementById('addPermValue').value = p.join(',');
+  }
+
+  async function approveUser(name) {
+    try {
+      await api('/api/users/' + encodeURIComponent(name) + '/approve', { method: 'POST' });
+      showMsg(name + ' approved.', true);
+      loadUsers();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  document.getElementById('userForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await api('/api/users', { method: 'POST', body: new URLSearchParams(new FormData(e.target)) });
+      e.target.reset();
+      showMsg('Account created.', true);
+      loadUsers();
+    } catch (err) { showMsg(err.message, false); }
+  });
+
+  async function deleteUser(name) {
+    if (!confirm('Remove account "' + name + '"?')) return;
+    try {
+      await api('/api/users/' + encodeURIComponent(name), { method: 'DELETE' });
+      showMsg('Account removed.', true);
+      loadUsers();
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  // ---------- ACTIVITY LOG (owner) ----------
+  async function loadAudit() {
+    try {
+      const list = await api('/api/audit');
+      document.getElementById('auditRows').innerHTML = list.length
+        ? list.map(a => '<tr><td>' + esc(a.date) + '</td><td>' + esc(a.user) + '</td><td>' + esc(a.action) + '</td><td>' + esc(a.details) + '</td></tr>').join('')
+        : '<tr><td colspan="4">No activity yet.</td></tr>';
+    } catch (e) { showMsg(e.message, false); }
+  }
+
+  (async function start() {
+    try { me = await api('/api/me'); showApp(); loadMedicines(); } catch (e) { showLogin(); }
+  })();
+</script>
+</body>
+</html>
