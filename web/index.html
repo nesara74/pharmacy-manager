@@ -535,8 +535,8 @@
     <!-- TOP BAR -->
     <header class="topbar">
       <div>
-        <h2>Pharmacy Sales Results</h2>
-        <span style="font-size:13px; color:#64748b;">Live inventory tracking &amp; financial report</span>
+        <h2 id="pageTitleText">Pharmacy Performance Dashboard</h2>
+        <span id="pageSubtext" style="font-size:13px; color:#64748b;">Live inventory tracking &amp; financial report</span>
       </div>
       <div style="display:flex; gap:12px; align-items:center;">
         <div id="liveClock" class="filter-pill">🕒 Loading clock...</div>
@@ -550,8 +550,8 @@
       <!-- DASHBOARD TAB -->
       <section id="tab-dashboard">
 
-        <!-- 4 DRIBBBLE PASTEL KPI CARDS -->
-        <div class="cards">
+        <!-- 4 DRIBBBLE PASTEL KPI CARDS (ROLE-BASED PRIVACY & SALES METRICS) -->
+        <div class="cards" id="cards">
           <!-- CARD 1 (LIME GREEN) -->
           <div class="pastel-card card-green">
             <div class="card-top">
@@ -559,9 +559,9 @@
               <div class="card-menu">•••</div>
             </div>
             <div>
-              <div class="card-title">Todays Sales</div>
-              <div class="card-value" id="cardTodaySales">₹95.00</div>
-              <div class="card-badge">▲ +2.5% This Month</div>
+              <div class="card-title" id="lblCard1">Todays Sales</div>
+              <div class="card-value" id="cardTodaySales">₹0.00</div>
+              <div class="card-badge" id="subCard1">▲ +2.5% This Month</div>
             </div>
           </div>
 
@@ -572,9 +572,9 @@
               <div class="card-menu">•••</div>
             </div>
             <div>
-              <div class="card-title">Available Inventory</div>
-              <div class="card-value" id="cardAvailableUnits">1,457</div>
-              <div class="card-badge">▲ +2.5% This Month</div>
+              <div class="card-title" id="lblCard2">Available Inventory</div>
+              <div class="card-value" id="cardAvailableUnits">0</div>
+              <div class="card-badge" id="subCard2">▲ +2.5% This Month</div>
             </div>
           </div>
 
@@ -585,9 +585,9 @@
               <div class="card-menu">•••</div>
             </div>
             <div>
-              <div class="card-title">Expired / Expiring Alerts</div>
-              <div class="card-value" id="cardExpiredCount">0.00%</div>
-              <div class="card-badge" style="color:#e11d48;">🚨 Stock Action Required</div>
+              <div class="card-title" id="lblCard3">Expired / Expiring Alerts</div>
+              <div class="card-value" id="cardExpiredCount">0 Alerts</div>
+              <div class="card-badge" id="subCard3" style="color:#e11d48;">🚨 Stock Action Required</div>
             </div>
           </div>
 
@@ -598,28 +598,11 @@
               <div class="card-menu">•••</div>
             </div>
             <div>
-              <div class="card-title">System Staff Accounts</div>
+              <div class="card-title" id="lblCard4">System Staff Accounts</div>
               <div class="card-value" id="cardStaffCount">2 Active</div>
-              <div class="card-badge" style="color:#4f46e5;">▲ +2.5% This Month</div>
+              <div class="card-badge" id="subCard4" style="color:#4f46e5;">▲ Active Shift</div>
             </div>
           </div>
-        </div>
-
-        <!-- DEDICATED STORE AVAILABLE MEDICINES SECTION -->
-        <div class="panel" style="border: 1px solid #a7f3d0; background:#f0fdf4;">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
-            <div>
-              <h3 style="margin:0; color:#064e3b; display:flex; align-items:center; gap:8px;">🏬 Currently Available Medicines In Store</h3>
-              <span style="font-size:12px; color:#047857;">Live view of all ready-to-dispense in-stock medicines &amp; rack positions</span>
-            </div>
-            <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;">
-              <button class="gray" style="padding:5px 12px; font-size:11px;" onclick="renderStoreAvailability('ALL')">All Categories</button>
-              <button class="gray" style="padding:5px 12px; font-size:11px;" onclick="renderStoreAvailability('Pain Relief')">Pain Relief</button>
-              <button class="gray" style="padding:5px 12px; font-size:11px;" onclick="renderStoreAvailability('Antibiotic')">Antibiotic</button>
-              <button class="gray" style="padding:5px 12px; font-size:11px;" onclick="renderStoreAvailability('Cold & Flu')">Cold &amp; Flu</button>
-            </div>
-          </div>
-          <div id="storeAvailableGrid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:14px;"></div>
         </div>
 
         <!-- CHARTS ROW (MATCHING DRIBBBLE SCREENSHOT) -->
@@ -869,7 +852,8 @@
     { username: 'worker', name: 'Staff Worker', phone: '9123456789', email: 'worker@pharmacy.com', role: 'WORKER', permissions: 'billing,inventory', approved: true, password: 'worker123' }
   ];
   let demoBills = [
-    { id: 101, date: '2026-03-30 10:15:00', customer: 'Walk-in Customer', cashier: 'owner (Pharmacy Owner)', total: '150.00', items: [{ name: 'Paracetamol 500mg', qty: 2, price: 5, lineTotal: '10.00' }, { name: 'Amoxicillin 500mg', qty: 1, price: 45, lineTotal: '45.00' }] }
+    { id: 101, date: '2026-03-30 10:15:00', customer: 'Walk-in Customer', cashier: 'owner (Pharmacy Owner)', total: '150.00', items: [{ name: 'Paracetamol 500mg', qty: 2, price: 5, lineTotal: '10.00' }, { name: 'Amoxicillin 500mg', qty: 1, price: 45, lineTotal: '45.00' }] },
+    { id: 102, date: '2026-03-30 11:30:00', customer: 'Ramesh Sen', cashier: 'worker (Staff Worker)', total: '85.00', items: [{ name: 'Cough Syrup 100ml', qty: 1, price: 85, lineTotal: '85.00' }] }
   ];
   let demoAudit = [
     { date: '2026-03-30 10:15:00', user: 'owner', action: 'BILL', details: '#101 total=150.00' }
@@ -1037,7 +1021,6 @@
       renderDashboard();
       renderRackFilter();
       renderRows();
-      renderStoreAvailability();
       locate();
     } catch (e) { showMsg(e.message, false); }
   }
@@ -1059,51 +1042,82 @@
   }
   setInterval(updateLiveClock, 1000);
 
-  function renderDashboard() {
-    const value = allItems.reduce((s, m) => s + m.value, 0);
-    const units = allItems.reduce((s, m) => s + m.quantity, 0);
-    const exp = allItems.filter(m => m.expiryAlert).length;
-
+  // ROLE-BASED FINANCIAL PRIVACY DASHBOARD
+  async function renderDashboard() {
     updateLiveClock();
-    document.getElementById('cardTodaySales').textContent = '₹' + value.toFixed(2);
-    document.getElementById('cardAvailableUnits').textContent = units.toLocaleString('en-IN');
-    document.getElementById('cardExpiredCount').textContent = exp + ' Alerts';
-    document.getElementById('cardStaffCount').textContent = (demoUsers.length || 2) + ' Active';
-    renderStoreAvailability('ALL');
-  }
 
-  // RENDER STORE AVAILABLE MEDICINES IN STORE
-  function renderStoreAvailability(categoryFilter = 'ALL') {
-    const box = document.getElementById('storeAvailableGrid');
-    if (!box) return;
-
-    let items = allItems.filter(m => m.quantity > 0);
-    if (categoryFilter !== 'ALL') {
-      items = items.filter(m => m.category.toLowerCase() === categoryFilter.toLowerCase());
+    const isOwner = me && me.role === 'OWNER';
+    let billsList = [];
+    try {
+      billsList = await api('/api/bills');
+    } catch(e) {
+      billsList = demoBills;
     }
 
-    if (items.length === 0) {
-      box.innerHTML = '<div style="padding:16px; color:#64748b; font-size:13px; grid-column:span 3;">No available medicines found in this category.</div>';
-      return;
-    }
+    if (isOwner) {
+      // OWNER VIEW: TOTAL STORE FINANCIALS & VALUATION
+      const totalInventoryValuation = allItems.reduce((s, m) => s + m.value, 0);
+      const totalStoreUnits = allItems.reduce((s, m) => s + m.quantity, 0);
+      const totalStoreSalesToday = billsList.reduce((s, b) => s + parseFloat(b.total || '0'), 0);
+      const expiredCount = allItems.filter(m => m.expiryAlert).length;
 
-    box.innerHTML = items.map(m => `
-      <div style="background:#ffffff; border:1px solid #d1fae5; border-radius:14px; padding:16px; box-shadow:var(--shadow-sm); display:flex; flex-direction:column; justify-content:space-between;">
-        <div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <b style="font-size:15px; color:#0f172a;">${esc(m.name)}</b>
-            <span class="badge OK" style="font-size:10px;">In Stock (${m.quantity})</span>
-          </div>
-          <div style="font-size:12px; color:#64748b; margin-bottom:8px;">
-            🏷️ Category: <b>${esc(m.category)}</b> | 📦 Location: <b>${esc(m.rack || 'Rack N/A')}</b>
-          </div>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; border-top:1px dashed #e2e8f0; padding-top:10px;">
-          <b style="font-size:16px; color:#047857;">₹${m.price.toFixed(2)}</b>
-          <button class="accent" style="padding:4px 10px; font-size:11px;" onclick="quickAddBill('${esc(m.id)}')">🛒 Add to POS</button>
-        </div>
-      </div>
-    `).join('');
+      document.getElementById('pageTitleText').textContent = 'Store Owner Financial Dashboard';
+      document.getElementById('pageSubtext').textContent = 'Full store sales, valuation, & inventory analytics';
+
+      document.getElementById('lblCard1').textContent = "Total Store Sales Today";
+      document.getElementById('cardTodaySales').textContent = '₹' + totalStoreSalesToday.toFixed(2);
+      document.getElementById('subCard1').textContent = '▲ Total Store Revenue';
+
+      document.getElementById('lblCard2').textContent = "Total Stock Valuation";
+      document.getElementById('cardAvailableUnits').textContent = '₹' + totalInventoryValuation.toFixed(2);
+      document.getElementById('subCard2').textContent = `📦 ${totalStoreUnits} Total Units`;
+
+      document.getElementById('lblCard3').textContent = "Expired / Stock Alerts";
+      document.getElementById('cardExpiredCount').textContent = expiredCount + ' Alerts';
+      document.getElementById('subCard3').textContent = '🚨 Stock Action Required';
+
+      document.getElementById('lblCard4').textContent = "Active Staff Accounts";
+      document.getElementById('cardStaffCount').textContent = (demoUsers.length || 2) + ' Active';
+      document.getElementById('subCard4').textContent = '👑 Owner Full Privileges';
+
+    } else {
+      // WORKER VIEW: PERSONAL SALES & COMPLETED BILLS MONEY
+      const myUsername = me ? me.username.toLowerCase() : '';
+      const myName = me ? (me.name || '').toLowerCase() : '';
+
+      const myBills = billsList.filter(b => {
+        const cashier = (b.cashier || '').toLowerCase();
+        return cashier.includes(myUsername) || (myName && cashier.includes(myName));
+      });
+
+      const myTotalMoneyToday = myBills.reduce((s, b) => s + parseFloat(b.total || '0'), 0);
+      const myCompletedBillsCount = myBills.length;
+      let myTotalItemsSold = 0;
+      myBills.forEach(b => {
+        if (b.items) {
+          b.items.forEach(it => myTotalItemsSold += (parseInt(it.qty || '1', 10)));
+        }
+      });
+
+      document.getElementById('pageTitleText').textContent = 'My Worker Performance Dashboard';
+      document.getElementById('pageSubtext').textContent = 'Your personal sales, completed orders, & shift stats';
+
+      document.getElementById('lblCard1').textContent = "My Sales Today (Money)";
+      document.getElementById('cardTodaySales').textContent = '₹' + myTotalMoneyToday.toFixed(2);
+      document.getElementById('subCard1').textContent = '💰 Total Billed By Me Today';
+
+      document.getElementById('lblCard2').textContent = "My Completed Bills";
+      document.getElementById('cardAvailableUnits').textContent = myCompletedBillsCount + ' Bills';
+      document.getElementById('subCard2').textContent = '🧾 Total Invoices Billed';
+
+      document.getElementById('lblCard3').textContent = "My Total Sold Items";
+      document.getElementById('cardExpiredCount').textContent = myTotalItemsSold + ' Units';
+      document.getElementById('subCard3').textContent = '📦 Units Sold Today';
+
+      document.getElementById('lblCard4').textContent = "Shift Account Status";
+      document.getElementById('cardStaffCount').textContent = 'Active Staff';
+      document.getElementById('subCard4').textContent = '👷 Worker Cashier Access';
+    }
   }
 
   function renderRows() {
