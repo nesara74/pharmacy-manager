@@ -412,6 +412,7 @@
   .OK { background: #16a34a; }
   .LOW { background: #ea580c; }
   .EXPIRING { background: #d97706; }
+  .EXPIRED { background: #dc2626; }
   .OWNER { background: #7c3aed; }
   .WORKER { background: #0284c7; }
   .PENDING { background: #64748b; }
@@ -468,7 +469,7 @@
 </head>
 <body>
 
-<!-- LOGIN / SIGN UP (VISIBLE BY DEFAULT AS SAFE FALLBACK) -->
+<!-- LOGIN / SIGN UP -->
 <div id="login" class="login-wrap">
   <form id="loginForm" class="login-box">
     <h2 style="margin-top:0">🔑 PharmaCare Login</h2>
@@ -532,14 +533,32 @@
   <!-- MAIN CANVAS -->
   <div class="main-canvas">
 
-    <!-- TOP BAR -->
+    <!-- TOP BAR WITH NOTIFICATION BELL & DRAWER -->
     <header class="topbar">
       <div>
         <h2 id="pageTitleText">Pharmacy Performance Dashboard</h2>
         <span id="pageSubtext" style="font-size:13px; color:#64748b;">Live inventory tracking &amp; financial report</span>
       </div>
-      <div style="display:flex; gap:12px; align-items:center;">
+      <div style="display:flex; gap:12px; align-items:center; position:relative;">
         <div id="liveClock" class="filter-pill">🕒 Loading clock...</div>
+
+        <!-- NOTIFICATION BELL BUTTON -->
+        <button id="notifBellBtn" class="filter-pill" style="cursor:pointer; background:#ffffff; border:1px solid #e2e8f0; border-radius:20px; padding:8px 14px; position:relative;" onclick="toggleNotifDrawer()">
+          🔔 Notifications <span id="notifBadge" class="badge danger" style="font-size:10px; padding:2px 6px; border-radius:10px; margin-left:4px;">0</span>
+        </button>
+
+        <!-- FLOATING NOTIFICATION DRAWER -->
+        <div id="notifDrawer" style="position:absolute; top:48px; right:0; width:360px; background:#ffffff; border:1px solid #cbd5e1; border-radius:16px; box-shadow:0 12px 32px rgba(0,0,0,0.18); z-index:9999; padding:18px;" hidden>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #f1f5f9; padding-bottom:10px;">
+            <b style="font-size:15px; color:#0f172a;">🔔 Live Stock Alarms &amp; Alerts</b>
+            <button class="gray" style="padding:3px 8px; font-size:10px;" onclick="clearAllNotifications()">Clear</button>
+          </div>
+          <div id="notifList" style="max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:10px;"></div>
+          <div style="margin-top:14px; padding-top:10px; border-top:1px dashed #e2e8f0;">
+            <button class="accent" style="width:100%; justify-content:center; padding:8px;" onclick="openAlarmSettingsModal()">⚙️ Alarm &amp; Notification Settings</button>
+          </div>
+        </div>
+
         <div class="filter-pill">📅 This Month ▼</div>
       </div>
     </header>
@@ -889,6 +908,36 @@
   </div>
 </div>
 
+<!-- ALARM THRESHOLD SETTINGS MODAL -->
+<div id="alarmSettingsModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;" hidden>
+  <div style="background:#fff; padding:26px; border-radius:16px; width:440px; box-shadow:0 10px 30px rgba(0,0,0,0.25); animation:popScale 0.25s ease;">
+    <h3 style="margin-top:0; color:#064e3b; display:flex; align-items:center; gap:8px;">⚙️ Stock Alarm &amp; Notification Thresholds</h3>
+    <p style="font-size:13px; color:#64748b; margin-bottom:16px;">Set custom thresholds for low stock reorder alarms &amp; expiry warnings:</p>
+    <form id="alarmSettingsForm" onsubmit="saveAlarmSettings(event)">
+      <div style="margin-bottom:14px;">
+        <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">🚨 Low Stock Reorder Threshold (Units):</label>
+        <input type="number" id="cfgLowStockLimit" min="1" value="30" style="width:100%; padding:10px;" required>
+        <small style="color:#64748b;">Trigger low stock alarm when quantity drops to or below this number.</small>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="font-size:13px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">⏳ Expiry Warning Window (Days):</label>
+        <input type="number" id="cfgExpiryDays" min="1" value="30" style="width:100%; padding:10px;" required>
+        <small style="color:#64748b;">Trigger expiry alert if medicine expires within this number of days.</small>
+      </div>
+      <div style="margin-bottom:18px; background:#f0fdf4; padding:12px; border-radius:10px; border:1px solid #bbf7d0;">
+        <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:13px; font-weight:700; color:#047857;">
+          <input type="checkbox" id="cfgEnableSound" checked style="width:18px; height:18px;">
+          <span>🔊 Enable Audio Alert Tone on Alarms</span>
+        </label>
+      </div>
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button type="button" class="gray" onclick="closeAlarmSettingsModal()">❌ Cancel</button>
+        <button type="submit" class="accent">💾 Save Alarm Settings</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
   let me = null;
   let allItems = [];
@@ -898,6 +947,15 @@
   let selectedSearchMed = null;
   let pendingStockWarn = null;
   let activePermUser = null;
+
+  // CUSTOM ALARM THRESHOLD SETTINGS
+  let alarmConfig = {
+    lowStockThreshold: 30,
+    expiryDaysWindow: 30,
+    enableSound: true
+  };
+
+  let notificationsList = [];
 
   let isDemoMode = false;
   let demoUsers = [
@@ -1105,12 +1163,142 @@
   async function loadMedicines() {
     try {
       allItems = await api('/api/medicines');
+      evaluateNotificationsAndAlarms();
       renderDashboard();
       renderRackFilter();
       renderRows();
       locate();
     } catch (e) { showMsg(e.message, false); }
   }
+
+  // NOTIFICATIONS BELL & ALARMS EVALUATOR
+  function evaluateNotificationsAndAlarms() {
+    notificationsList = [];
+    const today = new Date();
+
+    allItems.forEach(m => {
+      // 1. Check Low Stock Threshold
+      if (m.quantity <= alarmConfig.lowStockThreshold) {
+        notificationsList.push({
+          type: 'LOW_STOCK',
+          title: '🚨 Low Stock Warning',
+          msg: `<b>${esc(m.name)}</b> has only <b>${m.quantity} units</b> left (Below set alarm threshold of ${alarmConfig.lowStockThreshold} units)!`
+        });
+      }
+
+      // 2. Check Expiry Window
+      if (m.expiry) {
+        const expDate = new Date(m.expiry);
+        const diffDays = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+        if (diffDays <= alarmConfig.expiryDaysWindow) {
+          notificationsList.push({
+            type: 'EXPIRY',
+            title: '⏳ Expiry Alert',
+            msg: `<b>${esc(m.name)}</b> expires in <b>${diffDays <= 0 ? 'TODAY' : diffDays + ' days'}</b> (${m.expiry})!`
+          });
+        }
+      }
+    });
+
+    // Check Pending Approvals if Owner
+    if (me && me.role === 'OWNER') {
+      const pendingUsers = demoUsers.filter(u => !u.approved);
+      pendingUsers.forEach(u => {
+        notificationsList.push({
+          type: 'APPROVAL',
+          title: '👥 Pending Staff Approval',
+          msg: `Staff user <b>${esc(u.username)} (${esc(u.name || 'Worker')})</b> is waiting for your account approval.`
+        });
+      });
+    }
+
+    // Update Badge Counter
+    const badge = document.getElementById('notifBadge');
+    if (badge) {
+      badge.textContent = notificationsList.length;
+      badge.hidden = notificationsList.length === 0;
+    }
+
+    renderNotifDrawerList();
+  }
+
+  function toggleNotifDrawer() {
+    const drawer = document.getElementById('notifDrawer');
+    if (drawer) drawer.hidden = !drawer.hidden;
+  }
+
+  function renderNotifDrawerList() {
+    const listEl = document.getElementById('notifList');
+    if (!listEl) return;
+
+    if (notificationsList.length === 0) {
+      listEl.innerHTML = '<div style="padding:16px; text-align:center; color:#64748b; font-size:13px;">✅ All clear! No active alarms or warnings.</div>';
+      return;
+    }
+
+    listEl.innerHTML = notificationsList.map(n => `
+      <div style="background:#f8fafc; border-left:4px solid ${n.type==='LOW_STOCK'?'#f59e0b':n.type==='EXPIRY'?'#ef4444':'#2563eb'}; padding:10px 12px; border-radius:8px; font-size:12px;">
+        <b style="color:#0f172a; display:block; margin-bottom:2px;">${n.title}</b>
+        <div style="color:#475569;">${n.msg}</div>
+      </div>
+    `).join('');
+  }
+
+  function clearAllNotifications() {
+    notificationsList = [];
+    const badge = document.getElementById('notifBadge');
+    if (badge) { badge.textContent = '0'; badge.hidden = true; }
+    renderNotifDrawerList();
+  }
+
+  function openAlarmSettingsModal() {
+    document.getElementById('cfgLowStockLimit').value = alarmConfig.lowStockThreshold;
+    document.getElementById('cfgExpiryDays').value = alarmConfig.expiryDaysWindow;
+    document.getElementById('cfgEnableSound').checked = alarmConfig.enableSound;
+    document.getElementById('alarmSettingsModal').hidden = false;
+  }
+
+  function closeAlarmSettingsModal() {
+    document.getElementById('alarmSettingsModal').hidden = true;
+  }
+
+  function saveAlarmSettings(e) {
+    e.preventDefault();
+    alarmConfig.lowStockThreshold = parseInt(document.getElementById('cfgLowStockLimit').value, 10) || 30;
+    alarmConfig.expiryDaysWindow = parseInt(document.getElementById('cfgExpiryDays').value, 10) || 30;
+    alarmConfig.enableSound = document.getElementById('cfgEnableSound').checked;
+
+    closeAlarmSettingsModal();
+    evaluateNotificationsAndAlarms();
+    renderDashboard();
+    renderRows();
+    showMsg('⚙️ Alarm thresholds updated successfully!', true);
+
+    if (alarmConfig.enableSound && notificationsList.length > 0) {
+      playBeepTone();
+    }
+  }
+
+  function playBeepTone() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.2);
+    } catch(e) {}
+  }
+
+  // Close Notif Drawer when clicking outside
+  document.addEventListener('click', (e) => {
+    const drawer = document.getElementById('notifDrawer');
+    const bellBtn = document.getElementById('notifBellBtn');
+    if (drawer && bellBtn && !bellBtn.contains(e.target) && !drawer.contains(e.target)) {
+      drawer.hidden = true;
+    }
+  });
 
   function renderRackFilter() {
     const sel = document.getElementById('rackFilter');
@@ -1146,7 +1334,7 @@
       const totalInventoryValuation = allItems.reduce((s, m) => s + m.value, 0);
       const totalStoreUnits = allItems.reduce((s, m) => s + m.quantity, 0);
       const totalStoreSalesToday = billsList.reduce((s, b) => s + parseFloat(b.total || '0'), 0);
-      const expiredCount = allItems.filter(m => m.expiryAlert).length;
+      const expiredCount = allItems.filter(m => m.expiryAlert || m.quantity <= alarmConfig.lowStockThreshold).length;
 
       document.getElementById('pageTitleText').textContent = 'Store Owner Financial Dashboard';
       document.getElementById('pageSubtext').textContent = 'Full store sales, valuation, & inventory analytics';
@@ -1159,9 +1347,9 @@
       document.getElementById('cardAvailableUnits').textContent = '₹' + totalInventoryValuation.toFixed(2);
       document.getElementById('subCard2').textContent = `📦 ${totalStoreUnits} Total Units`;
 
-      document.getElementById('lblCard3').textContent = "Expired / Stock Alerts";
+      document.getElementById('lblCard3').textContent = "Stock Alarms & Alerts";
       document.getElementById('cardExpiredCount').textContent = expiredCount + ' Alerts';
-      document.getElementById('subCard3').textContent = '🚨 Stock Action Required';
+      document.getElementById('subCard3').textContent = '🚨 Action Required';
 
       document.getElementById('lblCard4').textContent = "Active Staff Accounts";
       document.getElementById('cardStaffCount').textContent = (demoUsers.length || 2) + ' Active';
@@ -1215,7 +1403,7 @@
     shown = allItems.filter(m => {
       const textMatch = !k || [m.id, m.barcode, m.name, m.category, m.supplier, m.location, m.rack, m.row].join(' ').toLowerCase().includes(k);
       const rackMatch = !selectedRack || m.rack === selectedRack;
-      const statusMatch = (f === 'LOW' ? m.lowStock : f === 'EXPIRING' ? m.expiryAlert : true);
+      const statusMatch = (f === 'LOW' ? m.quantity <= alarmConfig.lowStockThreshold : f === 'EXPIRING' ? m.expiryAlert : true);
       return textMatch && rackMatch && statusMatch;
     });
 
@@ -1238,7 +1426,7 @@
       '<td>' + m.reorderLevel + '</td>' +
       '<td>' + esc(m.expiry) + '</td>' +
       '<td>₹' + m.price.toFixed(2) + '</td>' +
-      '<td><span class="badge ' + m.status + '">' + m.status + '</span></td>' +
+      '<td><span class="badge ' + (m.quantity <= alarmConfig.lowStockThreshold ? 'LOW' : m.status) + '">' + (m.quantity <= alarmConfig.lowStockThreshold ? 'LOW STOCK' : m.status) + '</span></td>' +
       '<td><div style="display:flex; gap:6px; align-items:center;">' +
         '<button class="gray" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Stock In (+)" onclick="changeStock(' + i + ', 1)">📥</button>' +
         '<button class="warn" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Stock Out (-)" onclick="changeStock(' + i + ', -1)">📤</button>' +
@@ -1324,15 +1512,6 @@
     document.getElementById('medSearchBox').value = `${m.name} [₹${m.price.toFixed(2)}]`;
     document.getElementById('liveSearchResults').hidden = true;
   }
-
-  // Close dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    const dropdown = document.getElementById('liveSearchResults');
-    const box = document.getElementById('medSearchBox');
-    if (dropdown && box && !box.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.hidden = true;
-    }
-  });
 
   function addLineFromSearch() {
     const qty = parseInt(document.getElementById('pickQty').value, 10);
