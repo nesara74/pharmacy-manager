@@ -431,6 +431,13 @@
     padding: 20px;
     margin-bottom: 22px;
   }
+
+  /* THERMAL RECEIPT PRINT STYLES */
+  @media print {
+    body * { visibility: hidden; }
+    #receipt, #receipt * { visibility: visible; }
+    #receipt { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; border: none; }
+  }
 </style>
 </head>
 <body>
@@ -685,7 +692,8 @@
             <tbody id="billRows"><tr><td colspan="5">No medicines added yet.</td></tr></tbody>
           </table>
           <div style="font-size:24px; font-weight:800; margin:16px 0; color:#047857;">Total Amount: ₹<span id="billTotal">0.00</span></div>
-          <button onclick="saveBill()">💳 Complete Sale &amp; Print Bill</button>
+          <button onclick="saveBill()">💳 Complete Sale &amp; Save Bill</button>
+          <button class="accent" onclick="window.print()">🖨️ Print Receipt</button>
           <button class="gray" onclick="clearBill()">🗑️ Clear Bill</button>
           <div id="receipt" style="font-family:monospace; white-space:pre; background:#1e293b; color:#fff; padding:16px; border-radius:12px; margin-top:14px;" hidden></div>
         </div>
@@ -737,7 +745,10 @@
         </div>
 
         <div class="panel">
-          <h3>Products Inventory &amp; Racks Catalogue</h3>
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
+            <h3 style="margin:0;">Products Inventory &amp; Racks Catalogue</h3>
+            <button class="accent" onclick="exportInventoryCSV()">📥 Export Inventory CSV</button>
+          </div>
           <div class="toolbar">
             <input id="search" placeholder="Search barcode, rack, row, name, category, or ID" oninput="renderRows()" style="width:360px">
             <select id="rackFilter" onchange="renderRows()"><option value="">All Racks</option></select>
@@ -1033,6 +1044,24 @@
         (isOwner ? '<button class="danger" style="padding:6px 10px; font-size:14px; border-radius:6px;" title="Delete Medicine" onclick="deleteItem(' + i + ')">🗑️</button>' : '') +
       '</div></td></tr>'
     ).join('');
+  }
+
+  function exportInventoryCSV() {
+    if (allItems.length === 0) { showMsg('No inventory items to export.', false); return; }
+    const headers = ['ID', 'Barcode', 'Name', 'Rack', 'Row', 'Category', 'Quantity', 'ReorderLevel', 'Expiry', 'Price', 'Value'];
+    const csvRows = [headers.join(',')];
+    allItems.forEach(m => {
+      csvRows.push([
+        `"${m.id}"`, `"${m.barcode || ''}"`, `"${m.name}"`, `"${m.rack || ''}"`, `"${m.row || ''}"`, `"${m.category}"`,
+        m.quantity, m.reorderLevel, `"${m.expiry}"`, m.price, m.value
+      ].join(','));
+    });
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Pharmacy_Inventory_${new Date().toISOString().substring(0, 10)}.csv`;
+    link.click();
+    showMsg('Inventory CSV exported successfully!', true);
   }
 
   async function changeStock(i, sign) {
